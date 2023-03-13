@@ -10,6 +10,8 @@ namespace d_lama_service.Repositories
         private DataContext _context;
         private IExampleRepository? _exampleRepository;
         private IUserRepository? _userRepository;
+        private IRepository<Project>? _projectRepository;
+        // all repositories here ...
 
         /// <summary>
         /// Constructor of UnitOfWork.
@@ -51,6 +53,20 @@ namespace d_lama_service.Repositories
                     _userRepository = new UserRepository(_context);
                 }
                 return _userRepository;
+            }
+        }
+
+        public IRepository<Project> ProjectRepository
+        {
+            // lazy loading
+            get
+            {
+
+                if (_exampleRepository == null)
+                {
+                    _projectRepository = new ProjectRepository(_context);
+                }
+                return _projectRepository;
             }
         }
 
