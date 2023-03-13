@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 namespace d_lama_service.Repositories
 {
     /// <summary>
-    /// ExampleRepository Class.
+    /// ProjectRepository Class.
     /// </summary>
-    public class ProjectRepository : Repository<Project>
+    public class ProjectRepository : Repository<Project>, IProjectRepository
     {
         /// <summary>
         /// Constructor of ExampleRepository.
