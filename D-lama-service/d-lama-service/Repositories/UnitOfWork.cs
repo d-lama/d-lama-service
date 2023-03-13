@@ -11,6 +11,7 @@ namespace d_lama_service.Repositories
     {
         private DataContext _context;
         private IExampleRepository? _exampleRepository;
+        private IRepository<Project>? _projectRepository;
         // all repositories here ...
 
         /// <summary>
@@ -36,6 +37,20 @@ namespace d_lama_service.Repositories
                     _exampleRepository = new ExampleRepository(_context);
                 }
                 return _exampleRepository;
+            }
+        }
+
+        public IRepository<Project> ProjectRepository
+        {
+            // lazy loading
+            get
+            {
+
+                if (_exampleRepository == null)
+                {
+                    _projectRepository = new ProjectRepository(_context);
+                }
+                return _projectRepository;
             }
         }
 
