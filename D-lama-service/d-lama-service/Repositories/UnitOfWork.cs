@@ -11,6 +11,7 @@ namespace d_lama_service.Repositories
         private IExampleRepository? _exampleRepository;
         private IUserRepository? _userRepository;
         private IRepository<Project>? _projectRepository;
+        private IProjectRepository? _projectRepository;
         // all repositories here ...
 
         /// <summary>
@@ -57,6 +58,7 @@ namespace d_lama_service.Repositories
         }
 
         public IRepository<Project> ProjectRepository
+        public IProjectRepository ProjectRepository
         {
             // lazy loading
             get

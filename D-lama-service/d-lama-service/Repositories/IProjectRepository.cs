@@ -4,15 +4,15 @@ using d_lama_service.Repositories.Core;
 namespace d_lama_service.Repositories
 {
     /// <summary>
-    /// IExampleRepository Interface.
+    /// IProjectRepository Interface.
     /// </summary>
-    public interface IExampleRepository : IRepository<Example>
+    public interface IProjectRepository : IRepository<Project>
     {
         /// <summary>
-        /// This is a query only needed by for the ExampleRepository... => makes no sense to put it into IRepository.
+        /// 
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        Task<Example> MyFancyQueryAsync(int id);
+        Task<Project> MyFancyQueryAsync(int id);
     }
 }
