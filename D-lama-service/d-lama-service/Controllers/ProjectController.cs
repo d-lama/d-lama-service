@@ -7,7 +7,7 @@ using Data;
 namespace d_lama_service.Controllers
 {
     /// <summary>
-    /// Example Controller... Will be deleted...
+
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
@@ -25,17 +25,17 @@ namespace d_lama_service.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(await _unitOfWork.ExampleRepository.GetAllAsync()); // Example of how to use unit of work 
+            return Ok(await _unitOfWork.ProjectRepository.GetAllAsync()); // Example of how to use unit of work 
         }
 
         // GET api/<ProjectController>/5
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            Example? example = await _unitOfWork.ExampleRepository.GetAsync(id);
-            if (example != null) 
+            Project? project = await _unitOfWork.ProjectRepository.GetAsync(id);
+            if (project != null) 
             {
-                return Ok(example);
+                return Ok(project);
             }
             return NotFound();
         }
