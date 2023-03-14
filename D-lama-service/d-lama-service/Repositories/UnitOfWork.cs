@@ -46,7 +46,7 @@ namespace d_lama_service.Repositories
             get
             {
 
-                if (_exampleRepository == null)
+                if (_projectRepository == null)
                 {
                     _projectRepository = new ProjectRepository(_context);
                 }

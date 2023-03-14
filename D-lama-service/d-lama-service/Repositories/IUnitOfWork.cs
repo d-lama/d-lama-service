@@ -11,6 +11,11 @@
         IExampleRepository ExampleRepository{ get; }
 
         /// <summary>
+        /// Gets the ExampleRepository.
+        /// </summary>
+        IProjectRepository ProjectRepository { get; }
+
+        /// <summary>
         /// Saves the context.
         /// </summary>
         /// <returns> Task. </returns>
