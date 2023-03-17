@@ -3,9 +3,15 @@ using Data;
 
 namespace d_lama_service.Repositories
 {
+    /// <summary>
+    /// UserRepository abstracts the data accessing. 
+    /// </summary>
     public class UserRepository : Repository<User>, IUserRepository
     {
-
+        /// <summary>
+        /// Constructor of the UserRepository.
+        /// </summary>
+        /// <param name="context"> The database context. </param>
         public UserRepository(DataContext context) : base(context) { }
     }
 }

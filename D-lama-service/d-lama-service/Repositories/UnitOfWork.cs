@@ -1,6 +1,4 @@
-﻿using d_lama_service.Repositories.Core;
-using Data;
-using Microsoft.EntityFrameworkCore;
+﻿using Data;
 
 namespace d_lama_service.Repositories
 {
@@ -12,7 +10,6 @@ namespace d_lama_service.Repositories
         private DataContext _context;
         private IExampleRepository? _exampleRepository;
         private IUserRepository? _userRepository;
-        // all repositories here ...
 
         /// <summary>
         /// Constructor of UnitOfWork.

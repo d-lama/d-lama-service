@@ -3,6 +3,9 @@ using Data;
 
 namespace d_lama_service.Repositories
 {
+    /// <summary>
+    /// Interface for UserRepository.
+    /// </summary>
     public interface IUserRepository : IRepository<User>
     {
     }
