@@ -12,6 +12,7 @@ namespace d_lama_service.Models
     public static class Tokenizer
     {
         public static readonly string UserIdClaim = "UserId";
+        public static readonly string IsAdminClaim = "IsAdmin";
         private static readonly int _tokeLifeTimeDays = 2;
 
         /// <summary>
@@ -34,7 +35,8 @@ namespace d_lama_service.Models
                             new Claim(UserIdClaim, user.Id.ToString()),
                             new Claim(JwtRegisteredClaimNames.Name, $"{user.FirstName} {user.LastName}"),
                             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                            new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString())
+                            new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
+                            new Claim(IsAdminClaim, user.IsAdmin.ToString())
                 }),
                 IssuedAt = DateTime.UtcNow,
                 Expires = DateTime.UtcNow.AddDays(_tokeLifeTimeDays),

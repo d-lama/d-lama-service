@@ -13,6 +13,7 @@ namespace d_lama_service.Models
         [Required]
         public DateTime BirthDate { get; set; }
 
-        public bool IsAdmin { get; set; } = false;
+        [Required]
+        public bool IsAdmin { get; set; }
     }
 }
