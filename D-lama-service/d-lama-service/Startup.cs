@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 
 namespace d_lama_service
 {
@@ -32,6 +33,7 @@ namespace d_lama_service
         {
 
             services.AddControllers();
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(options =>
@@ -116,9 +118,6 @@ namespace d_lama_service
             {
                 app.UseSwagger();
                 app.UseSwaggerUI(options => {
-
-                    options.OAuthClientId("582127585194-qnkcbsmrpl68cupoq1op6du4tiqovqm4.apps.googleusercontent.com");
-                    options.OAuthClientSecret("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");
                     options.OAuthUsePkce();
                 });
                 app.UseDeveloperExceptionPage();
