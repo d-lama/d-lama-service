@@ -1,32 +1,27 @@
-﻿using d_lama_service.Repositories;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-builder.Services.AddTransient<IUnitOfWork, UnitOfWork>(); // DI
-
-builder.Services.AddDbContext<Data.DataContext>(
-    options =>
-    {
-        options.UseSqlServer(builder.Configuration.GetConnectionString("prd"));
-    });
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+namespace d_lama_service
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    /// <summary>
+    /// Program class.
+    /// </summary>
+    public class Program
+    {
 
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
+        /// <summary>
+        /// Main function.
+        /// </summary>
+        /// <param name="args"> Ignored string parameters. </param>
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
+            var startup = new Startup(builder.Configuration, builder.Environment);
+            startup.ConfigureServices(builder.Services); // calling ConfigureServices method
+            var app = builder.Build();
+            startup.Configure(app); // calling Configure method
+            app.Run();
+        }
+    }
+}

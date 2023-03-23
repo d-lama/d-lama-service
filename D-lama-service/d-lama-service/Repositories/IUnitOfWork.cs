@@ -11,6 +11,11 @@
         IExampleRepository ExampleRepository{ get; }
 
         /// <summary>
+        /// Gets the UserRepository.
+        /// </summary>
+        IUserRepository UserRepository { get; }
+
+        /// <summary>
         /// Saves the context.
         /// </summary>
         /// <returns> Task. </returns>

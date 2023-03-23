@@ -1,6 +1,4 @@
-﻿using d_lama_service.Repositories.Core;
-using Data;
-using Microsoft.EntityFrameworkCore;
+﻿using Data;
 
 namespace d_lama_service.Repositories
 {
@@ -11,7 +9,7 @@ namespace d_lama_service.Repositories
     {
         private DataContext _context;
         private IExampleRepository? _exampleRepository;
-        // all repositories here ...
+        private IUserRepository? _userRepository;
 
         /// <summary>
         /// Constructor of UnitOfWork.
@@ -36,6 +34,23 @@ namespace d_lama_service.Repositories
                     _exampleRepository = new ExampleRepository(_context);
                 }
                 return _exampleRepository;
+            }
+        }
+
+        /// <summary>
+        /// UserRepository access with lazy loading.
+        /// </summary>
+        public IUserRepository UserRepository
+        {
+            // lazy loading
+            get
+            {
+
+                if (_userRepository == null)
+                {
+                    _userRepository = new UserRepository(_context);
+                }
+                return _userRepository;
             }
         }
 
