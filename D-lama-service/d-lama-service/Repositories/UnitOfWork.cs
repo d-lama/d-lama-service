@@ -1,4 +1,6 @@
-﻿using Data;
+﻿using d_lama_service.Repositories;
+using d_lama_service.Repositories.ProjectRepositories;
+using Data;
 
 namespace d_lama_service.Repositories
 {
@@ -10,8 +12,9 @@ namespace d_lama_service.Repositories
         private DataContext _context;
         private IExampleRepository? _exampleRepository;
         private IUserRepository? _userRepository;
-        private IRepository<Project>? _projectRepository;
         private IProjectRepository? _projectRepository;
+        private IDataPointSetRepository? _dataPointSetRepository;
+        private ILabelSetRepository? _labelSetRepository;
         // all repositories here ...
 
         /// <summary>
@@ -57,10 +60,11 @@ namespace d_lama_service.Repositories
             }
         }
 
-        public IRepository<Project> ProjectRepository
+        /// <summary>
+        /// ProjectRepository access with lazy loading.
+        /// </summary>
         public IProjectRepository ProjectRepository
         {
-            // lazy loading
             get
             {
 
@@ -69,6 +73,36 @@ namespace d_lama_service.Repositories
                     _projectRepository = new ProjectRepository(_context);
                 }
                 return _projectRepository;
+            }
+        }
+
+        /// <summary>
+        /// DataPointSetRepository access with lazy loading.
+        /// </summary>
+        public IDataPointSetRepository DataPointSetRepository
+        {
+            get
+            {
+                if (_dataPointSetRepository == null)
+                {
+                    _dataPointSetRepository = new DataPointSetRepository(_context);
+                }
+                return _dataPointSetRepository;
+            }
+        }
+
+        /// <summary>
+        /// LabelSetRepository access with lazy loading.
+        /// </summary>
+        public ILabelSetRepository LabelSetRepository
+        {
+            get
+            {
+                if (_labelSetRepository == null)
+                {
+                    _labelSetRepository = new LabelSetRepository(_context);
+                }
+                return _labelSetRepository;
             }
         }
 

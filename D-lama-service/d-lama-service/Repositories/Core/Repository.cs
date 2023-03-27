@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 namespace d_lama_service.Repositories.Core
 {
     /// <summary>
-    /// The generic repository. 
+    /// The generic repository.
     /// </summary>
     /// <typeparam name="TEntity"> The entity type. </typeparam>
     public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity : Entity
@@ -40,7 +40,12 @@ namespace d_lama_service.Repositories.Core
 
         public void Update(TEntity entity)
         {
-            Entities.Update(entity); 
+            Entities.Update(entity);
+        }
+
+        public void Add(TEntity entity)
+        {
+            Entities.Add(entity);
         }
 
         public void UpdateRange(IEnumerable<TEntity> entities)

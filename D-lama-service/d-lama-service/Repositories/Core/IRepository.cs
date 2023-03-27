@@ -30,7 +30,13 @@ namespace d_lama_service.Repositories.Core
         Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
 
         /// <summary>
-        /// Adds or updates and entity.
+        /// Adds an entity.
+        /// </summary>
+        /// <param name="entity"> The entity to add or update. </param>
+        void Add(TEntity entity);
+
+        /// <summary>
+        /// Updates and entity.
         /// </summary>
         /// <param name="entity"> The entity to add or update. </param>
         void Update(TEntity entity);
