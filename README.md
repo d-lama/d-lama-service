@@ -26,7 +26,7 @@ The *D-LAMA Service* is an independent API for other apps of the D-LAMA team. It
 #### Initial setup
 - Install SQL Express on your development machine
 
-#### Deploy new database updates 
+#### Deploy new database updates
 
 - Open Package Manager Console in *Data* Project
 - `Add-Migration $MigrationName` to create database changing code (e.g Add-Migration AddUser)
