@@ -28,8 +28,11 @@ jobs:
         with:
           dotnet-version: '6.0.x'
           dotnet-quality: 'preview'
-          
-      - run: dotnet build D-lama-service.sln
+        
+      - name: Build
+        run: dotnet build
+      - name: Test
+        run: dotnet test
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
