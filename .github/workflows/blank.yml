@@ -32,7 +32,9 @@ jobs:
           dotnet-quality: 'preview'
         
       - name: Build
-        run: dotnet build
+        run: |
+          ls -la
+          dotnet build D-lama-service/D-lama-service.sln
       - name: Test
         run: dotnet test
 
