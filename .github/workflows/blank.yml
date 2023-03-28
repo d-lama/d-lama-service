@@ -36,7 +36,7 @@ jobs:
           ls -la
           dotnet build D-lama-service/D-lama-service.sln
       - name: Test
-        run: dotnet test
+        run: dotnet test D-lama-service/D-lama-service.sln
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
