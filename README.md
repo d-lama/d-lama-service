@@ -26,7 +26,7 @@ The *D-LAMA Service* is an independent API for other apps of the D-LAMA team. It
 #### Initial setup
 - Install SQL Express on your development machine
 
-#### Deploy new database updates
+#### Deploy new database updates 
 
 - Open Package Manager Console in *Data* Project
 - `Add-Migration $MigrationName` to create database changing code (e.g Add-Migration AddUser)
@@ -44,5 +44,5 @@ In our project we use the developer branching workflow.
 
 ### Developers
 - [Stefanie Sigrist](https://github.com/sigrist3)
-- [Gianmarco Güntert](https://github.com/guentgia)
+- [Gianmarco GÃ¼ntert](https://github.com/guentgia)
 - [Joel Grand](https://github.com/joelgrand)
