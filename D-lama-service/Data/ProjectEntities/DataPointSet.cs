@@ -10,6 +10,10 @@ namespace Data.ProjectEntities
         [Required]
         public string DataPointSetName { get; set; }
 
+        // navigation (EF core relationship mapping)
+        public int ProjectId { get; set; }
+        public Project Project { get; set; }
+
         public DataPointSet(string dataPointSetName)
         {
             DataPointSetName = dataPointSetName;

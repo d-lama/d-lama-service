@@ -5,6 +5,7 @@ using d_lama_service.Models.ProjectModels;
 using d_lama_service.Models;
 using Data;
 using Microsoft.AspNetCore.Authorization;
+using d_lama_service.Attributes;
 
 namespace d_lama_service.Controllers
 {
@@ -30,39 +31,25 @@ namespace d_lama_service.Controllers
         /// <summary>
         /// Retrieves a list of all projects.
         /// </summary>
-        /// <returns> A list all projects. </returns>
-        [Authorize]
+        /// <returns> A list of projects or Null if there are no projects at all. </returns>
         [HttpGet]
-        [Route("getAllProjects")]
+        [Route("GetAllProjects")]
         public async Task<IActionResult> GetAllProjects()
         {
-             var projectList = await _unitOfWork.ProjectRepository.GetAllAsync();
-
-            if (projectList == null)
-            {
-                return NotFound();
-            }
-            return Ok(projectList);
+            return Ok(await _unitOfWork.ProjectRepository.GetAllAsync());
         }
 
         /// <summary>
         /// Retrieves a list of projects by a given admin user.
         /// </summary>
         /// <returns> A list of the projects created by logged in admin user. </returns>
-        [Authorize]
+        [AdminAuthorize]
         [HttpGet]
-        [Route("getOwnerProjects")]
-        public async Task<IActionResult> GetOwnerProjects()
+        [Route("GetAdminProjects")]
+        public async Task<IActionResult> GetAdminProjects()
         {
             User user = await GetAuthenticatedUserAsync();
-            var userId = user.Id;
-            if (!user.IsAdmin)
-            {
-                return BadRequest("This action is restricted to admin users.");
-            }
-            var projectList = await _unitOfWork.ProjectRepository.FindAsync(e => e.OwnerId == user.Id);
-
-            return Ok(projectList);
+            return Ok(await _unitOfWork.ProjectRepository.FindAsync(e => e.OwnerId == user.Id));
         }
 
         /// <summary>
@@ -70,7 +57,6 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <param name="id"> The project ID. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
-        [Authorize]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetProject(int id)
         {
@@ -88,16 +74,11 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <param name="projectForm"> The project form containing all needed information to create a project. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
-        [Authorize]
+        [AdminAuthorize]
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateProjectModel projectForm)
+        public async Task<IActionResult> Create([FromBody] ProjectModel projectForm)
         {
             User user = await GetAuthenticatedUserAsync();
-            var userId = user.Id;
-            if (!user.IsAdmin)
-            {
-                return BadRequest("This action is restricted to admin users.");
-            }
 
             var nameExists = (await _unitOfWork.ProjectRepository.FindAsync(e => e.ProjectName == projectForm.ProjectName)).Any();
             if (nameExists)
@@ -107,16 +88,19 @@ namespace d_lama_service.Controllers
 
             string dataSetName = projectForm.ProjectName + " data set";
             var dataSet = new DataPointSet(dataSetName);
-            _unitOfWork.DataPointSetRepository.Add(dataSet);
-            await _unitOfWork.SaveAsync();
+            _unitOfWork.DataPointSetRepository.Update(dataSet);
+            // await _unitOfWork.SaveAsync();
 
             string labelSetName = projectForm.ProjectName + " label set";
             var labelSet = new LabelSet(labelSetName);
-            _unitOfWork.LabelSetRepository.Add(labelSet);
-            await _unitOfWork.SaveAsync();
+            _unitOfWork.LabelSetRepository.Update(labelSet);
+            // await _unitOfWork.SaveAsync();
 
-            var project = new Project(projectForm.ProjectName, projectForm.Description, userId, dataSet.Id, labelSet.Id);
-            _unitOfWork.ProjectRepository.Add(project);
+            var project = new Project(projectForm.ProjectName, projectForm.Description, user.Id);
+            // NullReferenceException: Object reference not set to an instance of an object
+            project.DataPointSets.Add(dataSet);
+            project.LabelSets.Add(labelSet);
+            _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
             return Ok();
@@ -128,23 +112,19 @@ namespace d_lama_service.Controllers
         /// <param name="id"> The project ID. </param>
         /// <param name="projectForm"> The project form containing all needed information to edit a project. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
-        [Authorize]
+        [AdminAuthorize]
         [HttpPatch("{id:int}")]
-        public async Task<IActionResult> Patch(int id, [FromBody] EditProjectModel projectForm)
-        {
-            User user = await GetAuthenticatedUserAsync();
-            if (!user.IsAdmin)
-            {
-                return BadRequest("This action is restricted to admin users.");
-            }
+        public async Task<IActionResult> Patch(int id, [FromBody] ProjectModel projectForm)
+        {        
             var project = await _unitOfWork.ProjectRepository.GetAsync(id);
             if (project == null)
             {
                 return NotFound();
             }
 
-            project.ProjectName = projectForm.ProjectName ?? project.ProjectName;
-            project.Description = projectForm.Description ?? project.Description;
+            // no null in projectForm because of required annotation in model
+            project.ProjectName = projectForm.ProjectName;
+            project.Description = projectForm.Description;
 
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
@@ -157,7 +137,6 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <param name="id"> The project ID. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
-        [Authorize]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -172,17 +151,8 @@ namespace d_lama_service.Controllers
             {
                 return NotFound();
             }
-            var dataPointSet = await _unitOfWork.DataPointSetRepository.GetAsync(project.DataSetId);
-            if (dataPointSet != null)
-            {
-                _unitOfWork.DataPointSetRepository.Delete(dataPointSet);
-            }
-            var labelSet = await _unitOfWork.LabelSetRepository.GetAsync(project.LabelSetId);
-            if (labelSet != null)
-            {
-                _unitOfWork.LabelSetRepository.Delete(labelSet);
-            }
 
+            // cascade deletes children
             _unitOfWork.ProjectRepository.Delete(project);
             
             await _unitOfWork.SaveAsync();

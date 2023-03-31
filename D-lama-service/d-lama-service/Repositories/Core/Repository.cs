@@ -43,11 +43,6 @@ namespace d_lama_service.Repositories.Core
             Entities.Update(entity);
         }
 
-        public void Add(TEntity entity)
-        {
-            Entities.Add(entity);
-        }
-
         public void UpdateRange(IEnumerable<TEntity> entities)
         {
             Entities.UpdateRange(entities);

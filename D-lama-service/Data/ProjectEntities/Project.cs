@@ -15,20 +15,18 @@ namespace Data.ProjectEntities
         [Required]
         public int OwnerId { get; set; }
         [Required]
-        public int DataSetId { get; set; }
-        [Required]
-        public int LabelSetId { get; set; }
-        [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedDate { get; set; }
 
-        public Project(string projectName, string description, int ownerId, int dataSetId, int labelSetId)
+        // navigation (EF core relationship mapping)
+        public ICollection<DataPointSet> DataPointSets { get; }
+        public ICollection<LabelSet> LabelSets { get; }
+
+        public Project(string projectName, string description, int ownerId)
         {
             ProjectName = projectName;
             Description = description;
             OwnerId = ownerId;
-            DataSetId = dataSetId;
-            LabelSetId = labelSetId;
         }
     }
 }
