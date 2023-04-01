@@ -88,13 +88,9 @@ namespace d_lama_service.Controllers
 
             string dataSetName = projectForm.ProjectName + " data set";
             var dataSet = new DataPointSet(dataSetName);
-            _unitOfWork.DataPointSetRepository.Update(dataSet);
-            // await _unitOfWork.SaveAsync();
 
             string labelSetName = projectForm.ProjectName + " label set";
             var labelSet = new LabelSet(labelSetName);
-            _unitOfWork.LabelSetRepository.Update(labelSet);
-            // await _unitOfWork.SaveAsync();
 
             var project = new Project(projectForm.ProjectName, projectForm.Description, user.Id);
             // NullReferenceException: Object reference not set to an instance of an object

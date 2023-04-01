@@ -27,6 +27,8 @@ namespace Data.ProjectEntities
             ProjectName = projectName;
             Description = description;
             OwnerId = ownerId;
+            DataPointSets = new List<DataPointSet>();
+            LabelSets = new List<LabelSet>();
         }
     }
 }
