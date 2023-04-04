@@ -19,4 +19,6 @@ jobs:
           echo $GITHUB_OUTPUT
   # This workflow contains a single job called "build"
   checkout:
-   uses: d-lama/ops-d-lama-service/.github/workflows/d-lama-service-ci.yml@main
+    needs:
+      - call
+    uses: d-lama/ops-d-lama-service/.github/workflows/d-lama-service-ci.yml@main
