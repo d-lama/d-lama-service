@@ -1,4 +1,6 @@
-﻿namespace d_lama_service.Repositories
+﻿using d_lama_service.Repositories.ProjectRepositories;
+
+namespace d_lama_service.Repositories
 {
     /// <summary>
     /// Interface for the UnitOfWork.
@@ -14,6 +16,21 @@
         /// Gets the UserRepository.
         /// </summary>
         IUserRepository UserRepository { get; }
+
+        /// <summary>
+        /// Gets the ProjectRepository.
+        /// </summary>
+        IProjectRepository ProjectRepository { get; }
+
+        /// <summary>
+        /// Gets the DataPointSetRepository.
+        /// </summary>
+        IDataPointSetRepository DataPointSetRepository { get; }
+
+        /// <summary>
+        /// Gets the LabelSetRepository.
+        /// </summary>
+        ILabelSetRepository LabelSetRepository { get; }
 
         /// <summary>
         /// Saves the context.
