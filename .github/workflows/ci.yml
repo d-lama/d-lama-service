@@ -24,6 +24,7 @@ jobs:
     uses: d-lama/ops-d-lama-service/.github/workflows/d-lama-service-ci.yml@main
     with:
       sln-path: D-lama-service/D-lama-service.sln
+    secrets:
       envPAT: ${{ secrets.SONAR_TOKEN }}
 
   sonarcloud:
