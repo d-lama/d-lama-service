@@ -8,34 +8,18 @@ on: [push, workflow_dispatch]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  call:
+  pre:
     runs-on: ubuntu-latest
     steps:
       - name: Show where is triggered from
         run: |
-          echo $DESTINATION
-          ls -la
-          echo "DESTINATION=Service" >> $GITHUB_OUTPUT
-          echo $GITHUB_OUTPUT
+          echo d-lama-service ci/cd pipeline is triggered.
   # This workflow contains a single job called "build"
-  checkout:
+  ci:
     needs:
-      - call
+      - pre
     uses: d-lama/ops-d-lama-service/.github/workflows/d-lama-service-ci.yml@main
     with:
       sln-path: D-lama-service/D-lama-service.sln
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  sonarcloud:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        # Disabling shallow clone is recommended for improving relevancy of reporting
-        fetch-depth: 0
-    - name: SonarCloud Scan
-      uses: sonarsource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
