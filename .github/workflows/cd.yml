@@ -15,7 +15,7 @@ jobs:
         run: |
           echo d-lama-service ci/cd pipeline is triggered.
   # This workflow contains a single job called "build"
-  ci:
+  cd:
     needs:
       - pre
     uses: d-lama/ops-d-lama-service/.github/workflows/d-lama-service-cd.yml@main
