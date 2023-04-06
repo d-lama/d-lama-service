@@ -1,5 +1,6 @@
 # D-LAMA Service
 
+
 The *D-LAMA Service* is an independent API for other apps of the D-LAMA team. It uses the .NET Core 6.0.14 (LTS) framework, which allows deploying it on any platform. 
 
 ## Development
