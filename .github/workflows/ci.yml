@@ -23,3 +23,4 @@ jobs:
       sln-path: D-lama-service/D-lama-service.sln
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
