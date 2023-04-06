@@ -1,5 +1,5 @@
 {
   "release": {
-    "branches": ["master", "next", "main", "feat/cicd-ops"]
+    "branches": ["main", "feat/cicd-ops"]
   }
 }
