@@ -24,4 +24,4 @@ jobs:
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PA_TOKEN: ${{ secrets.PA_TOKEN }}
