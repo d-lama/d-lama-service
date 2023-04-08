@@ -13,7 +13,7 @@ using System.Linq.Expressions;
 
 namespace MSTest.IntegrationTests
 {
-    public class IntegrationTestBase
+    public class APITestBase
     {
         protected DataContext Context;
         private readonly IConfiguration _configuration;
@@ -26,20 +26,25 @@ namespace MSTest.IntegrationTests
         /// Loads configuration defined in appsettings.json.
         /// Defines test database through ConnectionString identifier 'tst'.
         /// </summary>
-        public IntegrationTestBase() 
+        public APITestBase() 
         {
             _configuration = new ConfigurationBuilder()
                 .AddJsonFile(@"appsettings.json")
                 .AddEnvironmentVariables()
                 .Build(); // initialize config
-            
+
+            ReloadContext();
+
+            TestUsers.Add(Admin);
+            TestUsers.Add(User);
+        }
+
+        public void ReloadContext() 
+        {
             // initialize Context
             var optionsBuilder = new DbContextOptionsBuilder<DataContext>();
             optionsBuilder.UseSqlServer(_configuration.GetConnectionString("tst"));
             Context = new DataContext(optionsBuilder.Options);
-
-            TestUsers.Add(Admin);
-            TestUsers.Add(User);
         }
                 
         /// <summary>
@@ -73,8 +78,9 @@ namespace MSTest.IntegrationTests
                 var hash = PasswordHasher.ComputeHash(testUser.Password, salt, pepper, UserController.Iteration);
                 var user = new User(testUser.Email, "my first name", "my last name", hash, salt, DateTime.Today.AddYears(-20), testUser.IsAdmin);
                 await Context.AddAsync(user);
+                await Context.SaveChangesAsync();
+                testUser.Id = user.Id;
             }
-            await Context.SaveChangesAsync();
         }
 
         private async Task CleanupUsers()
@@ -95,6 +101,7 @@ namespace MSTest.IntegrationTests
             public string Email { get; set; }
             public string Password { get; set; }
             public bool IsAdmin { get; set; }   
+            public int Id { get; set; }
 
             public TestUser(string email, string password, bool isAdmin)
             {
