@@ -1,5 +1,6 @@
 ﻿using d_lama_service.Attributes;
 using d_lama_service.Models;
+using d_lama_service.Models.UserViewModels;
 using d_lama_service.Repositories;
 using Data;
 using Microsoft.AspNetCore.Authorization;
@@ -22,8 +23,9 @@ namespace d_lama_service.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _configuration;
-        public static readonly int Iteration = 3;
         private readonly string _pepper;
+        private static readonly string Censored = "**********";
+        public static readonly int Iteration = 3;
 
         /// <summary>
         /// Constructor of the UserController.
@@ -87,7 +89,7 @@ namespace d_lama_service.Controllers
             _unitOfWork.UserRepository.Update(user);
             await _unitOfWork.SaveAsync();
 
-            return Ok();
+            return Created(nameof(Get),null);
         }
 
         /// <summary>
@@ -95,11 +97,29 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <returns> The user. </returns>
         [HttpGet]
-        public async Task<IActionResult> Get() 
+        [Route("Me")]
+        public async Task<IActionResult> GetMe() 
         {
             User user = await GetAuthenticatedUserAsync();
-            user.PasswordSalt = "***";
-            user.PasswordHash = "***";
+            user.PasswordSalt = Censored;
+            user.PasswordHash = Censored;
+            return Ok(user);
+        }
+
+        /// <summary>
+        /// Gets a user by id.
+        /// </summary>
+        /// <returns> The user. </returns>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(int id)
+        {
+            User? user = await _unitOfWork.UserRepository.GetAsync(id);
+            if (user == null) 
+            {
+                return NotFound();
+            }
+            user.PasswordSalt = Censored;
+            user.PasswordHash = Censored;
             return Ok(user);
         }
 
@@ -108,8 +128,8 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <param name="modifiedUser"> The properties to update. </param>
         /// <returns> The updated user. </returns>
-        [HttpPatch]
-        public async Task<IActionResult> Edit([FromBody] EditUserModel modifiedUser) 
+        [HttpPatch("Me")]
+        public async Task<IActionResult> EditMe([FromBody] EditUserModel modifiedUser) 
         {
             User user = await GetAuthenticatedUserAsync();
             
@@ -131,7 +151,7 @@ namespace d_lama_service.Controllers
             _unitOfWork.UserRepository.Update(user);
             await _unitOfWork.SaveAsync();
 
-            return await Get();
+            return await GetMe();
         }
 
         [HttpGet]

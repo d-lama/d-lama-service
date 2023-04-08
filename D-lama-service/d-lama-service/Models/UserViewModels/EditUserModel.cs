@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace d_lama_service.Models
+namespace d_lama_service.Models.UserViewModels
 {
     public class EditUserModel
     {
