@@ -13,7 +13,7 @@ namespace d_lama_service.Repositories.Core
         /// Gets an entity by a provided id.
         /// </summary>
         /// <param name="id"> The id of the entity. </param>
-        /// <returns> The entity. </returns>
+        /// <returns> The entity found or null. </returns>
         Task<TEntity?> GetAsync(int id);
 
         /// <summary>
