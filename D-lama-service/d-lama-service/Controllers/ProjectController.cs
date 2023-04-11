@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using d_lama_service.Middleware;
 using System.Net;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
+using System.IO.Compression;
 
 namespace d_lama_service.Controllers
 {
@@ -237,6 +239,100 @@ namespace d_lama_service.Controllers
             }
 
             return project;
+        }
+
+        /// <summary>
+        /// Uploads a file and assigns the content to a given project.
+        /// </summary>
+        /// <param name="id"> The project ID. </param>
+        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        [AdminAuthorize]
+        [HttpPost("{id:int}/UploadDataSet")]
+        public async Task<IActionResult> Upload(int projectId, IFormFile file)
+        {
+            // Check if the project exists
+            var project = await _unitOfWork.ProjectRepository.GetAsync(projectId);
+            if (project == null)
+            {
+                return NotFound();
+            }
+
+            // Check if a file was uploaded
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file was uploaded");
+            }
+
+            // Check if the file is a zip archive
+            if (!file.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("The uploaded file must be a zip archive");
+            }
+
+            // Create a unique filename for the uploaded file
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+
+            // Create a directory to store the uploaded file
+            var directoryPath = Path.Combine(_environment.WebRootPath, "uploads", projectId.ToString());
+            Directory.CreateDirectory(directoryPath);
+
+            // Save the uploaded file to the directory
+            var filePath = Path.Combine(directoryPath, fileName);
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+
+            // Unzip the uploaded file and store its contents locally
+            var extractPath = Path.Combine(directoryPath, "extracted");
+            Directory.CreateDirectory(extractPath);
+
+            using (ZipArchive archive = new ZipArchive(new FileStream(filePath, FileMode.Open)))
+            {
+                foreach (ZipArchiveEntry entry in archive.Entries)
+                {
+                    // Check if the entry is a file
+                    if (!string.IsNullOrEmpty(entry.Name))
+                    {
+                        // Check if the file is a jpg, png, or csv file
+                        if (!entry.Name.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                            && !entry.Name.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                            && !entry.Name.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return BadRequest("The zip archive contains invalid files");
+                        }
+
+                        string extractFilePath = Path.Combine(extractPath, entry.FullName);
+
+                        if (entry.FullName.EndsWith("/"))
+                        {
+                            Directory.CreateDirectory(Path.GetDirectoryName(extractFilePath));
+                            continue;
+                        }
+
+                        using (Stream entryStream = entry.Open())
+                        using (FileStream extractStream = new FileStream(extractFilePath, FileMode.Create))
+                        {
+                            await entryStream.CopyToAsync(extractStream);
+                        }
+                    }
+                }
+            }
+
+            // Check if the zip archive contains at least one image or csv file
+            if (!Directory.EnumerateFiles(extractPath, "*.jpg", SearchOption.AllDirectories).Any()
+                && !Directory.EnumerateFiles(extractPath, "*.png", SearchOption.AllDirectories).Any()
+                && !Directory.EnumerateFiles(extractPath, "*.csv", SearchOption.AllDirectories).Any())
+            {
+                return BadRequest("The zip archive must contain at least one image or csv file");
+            }
+
+            // Update the project's metadata to include the extracted files
+            project.ExtractedPath = extractPath;
+            _unitOfWork.ProjectRepository.Update(project);
+            await _unitOfWork.SaveAsync();
+
+            return Ok();
         }
 
         private async Task<User> GetAuthenticatedUserAsync()
