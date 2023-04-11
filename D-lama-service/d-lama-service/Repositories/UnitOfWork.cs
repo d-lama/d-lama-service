@@ -10,7 +10,6 @@ namespace d_lama_service.Repositories
     public class UnitOfWork : IUnitOfWork
     {
         private DataContext _context;
-        private IExampleRepository? _exampleRepository;
         private IUserRepository? _userRepository;
         private IProjectRepository? _projectRepository;
         private IDataPointSetRepository? _dataPointSetRepository;
@@ -24,23 +23,6 @@ namespace d_lama_service.Repositories
         public UnitOfWork(DataContext context)
         {
             _context = context; 
-        }
-
-        /// <summary>
-        /// ExampleRepository access with lazy loading.
-        /// </summary>
-        public IExampleRepository ExampleRepository
-        {
-            // lazy loading
-            get
-            {
-
-                if (_exampleRepository == null)
-                {
-                    _exampleRepository = new ExampleRepository(_context);
-                }
-                return _exampleRepository;
-            }
         }
 
         /// <summary>
