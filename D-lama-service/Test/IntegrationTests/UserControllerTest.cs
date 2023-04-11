@@ -6,13 +6,11 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 
-namespace MSTest.IntegrationTests
+namespace Test.IntegrationTests
 {
     [TestClass]
     public class UserControllerTest : APITestBase
     {
-        private WebApplicationFactory<Startup> _factory;
-        private HttpClient _client;
         private readonly string _apiRoute = "api/User";
         private string _testEmailAddress = "this_is_a_test@gmail.com";
 
@@ -22,8 +20,6 @@ namespace MSTest.IntegrationTests
         [TestInitialize]
         public void BeforeEach()
         {
-            _factory = new WebApplicationFactory<Startup>();
-            _client = _factory.CreateClient();  
         }
 
         /// <summary>
@@ -33,7 +29,6 @@ namespace MSTest.IntegrationTests
         public async Task AfterEach()
         {
             await CleanUpTestUser();
-            _factory.Dispose();
         }
 
         [TestMethod]
@@ -46,7 +41,7 @@ namespace MSTest.IntegrationTests
             request.Content = content;
             
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
             
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
@@ -63,7 +58,7 @@ namespace MSTest.IntegrationTests
             request.Content = content;
             
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
             
             // Assert
             Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
@@ -83,8 +78,8 @@ namespace MSTest.IntegrationTests
             request2.Content = content2;
 
             // Act
-            var response = await _client.SendAsync(request);
-            var response2 = await _client.SendAsync(request2);
+            var response = await Client.SendAsync(request);
+            var response2 = await Client.SendAsync(request2);
             
             // Assert
             Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
@@ -104,7 +99,7 @@ namespace MSTest.IntegrationTests
             request.Content = content;
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
@@ -121,7 +116,7 @@ namespace MSTest.IntegrationTests
             request.Content = content;
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -138,7 +133,7 @@ namespace MSTest.IntegrationTests
             request.Content = content;
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -155,7 +150,7 @@ namespace MSTest.IntegrationTests
             request.Content = content;
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
@@ -169,7 +164,7 @@ namespace MSTest.IntegrationTests
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -184,7 +179,7 @@ namespace MSTest.IntegrationTests
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", "InvalidToken");
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -200,7 +195,7 @@ namespace MSTest.IntegrationTests
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
@@ -219,7 +214,7 @@ namespace MSTest.IntegrationTests
             var user = Context.Users.Where(e => e.Email == User.Email).First();
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
             ReloadContext(); // context must be reloaded as there were changes
             var updatedUser = Context.Users.Where(e => e.Email == User.Email).First();
 
@@ -246,7 +241,7 @@ namespace MSTest.IntegrationTests
             request.Content = content;
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
@@ -265,7 +260,7 @@ namespace MSTest.IntegrationTests
             var user = Context.Users.Where(e => e.Email == User.Email).First();
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
             ReloadContext(); // context must be reloaded as there were changes
             var updatedUser = Context.Users.Where(e => e.Email == User.Email).First();
 
@@ -291,7 +286,7 @@ namespace MSTest.IntegrationTests
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
@@ -308,20 +303,10 @@ namespace MSTest.IntegrationTests
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Act
-            var response = await _client.SendAsync(request);
+            var response = await Client.SendAsync(request);
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-        }
-
-        private async Task<string> GetAuthToken(LoginModel login) 
-        {
-            var uri = _apiRoute + "/AuthToken";
-            var content = new StringContent(JsonConvert.SerializeObject(login), Encoding.UTF8, "application/json");
-            var request = new HttpRequestMessage(HttpMethod.Post, uri);
-            request.Content = content;
-            var response = await _client.SendAsync(request);
-            return response.Content.ReadAsStringAsync().Result;
         }
 
         private async Task CleanUpTestUser()

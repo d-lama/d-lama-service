@@ -14,7 +14,6 @@ namespace Data
     {
         public DataContext(DbContextOptions options) : base(options) {}
 
-        public DbSet<Example> Examples { get; set; }
         public DbSet<Project> Projects { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<DataPointSet> DataPointSets { get; set; }

@@ -8,11 +8,6 @@ namespace d_lama_service.Repositories
     public interface IUnitOfWork : IAsyncDisposable
     {
         /// <summary>
-        /// Gets the ExampleRepository.
-        /// </summary>
-        IExampleRepository ExampleRepository{ get; }
-
-        /// <summary>
         /// Gets the UserRepository.
         /// </summary>
         IUserRepository UserRepository { get; }

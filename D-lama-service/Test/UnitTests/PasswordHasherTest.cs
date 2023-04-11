@@ -1,6 +1,6 @@
 using d_lama_service.Models;
 
-namespace MSTest.UnitTests
+namespace Test.UnitTests
 {
     [TestClass]
     public class PasswordHasherTest
