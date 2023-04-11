@@ -10,16 +10,23 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Linq.Expressions;
+using d_lama_service;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Newtonsoft.Json;
+using d_lama_service.Models.UserViewModels;
 
-namespace MSTest.IntegrationTests
+namespace Test.IntegrationTests
 {
     public class APITestBase
     {
+        protected readonly TestUser User = new TestUser("test@gmail.com", "123MySecurePW!?", false);
+        protected readonly TestUser Admin = new TestUser("admin@gmail.com", "123MySecurePW!?", true);
+        protected readonly TestUser Admin2 = new TestUser("admin2@gmail.com", "123MySecurePW!?", true);
+        protected readonly List<TestUser> TestUsers = new List<TestUser>();
+        protected HttpClient Client;
         protected DataContext Context;
         private readonly IConfiguration _configuration;
-        public readonly TestUser User = new TestUser("test@gmail.com", "123MySecurePW!?", false);
-        public readonly TestUser Admin = new TestUser("admin@gmail.com", "123MySecurePW!?", true);
-        public readonly List<TestUser> TestUsers = new List<TestUser>();
+        private WebApplicationFactory<Startup> _factory;
 
         /// <summary>
         /// Constructor of IntegrationTestBase.
@@ -36,25 +43,39 @@ namespace MSTest.IntegrationTests
             ReloadContext();
 
             TestUsers.Add(Admin);
+            TestUsers.Add(Admin2);
             TestUsers.Add(User);
         }
 
-        public void ReloadContext() 
+        protected void ReloadContext() 
         {
             // initialize Context
             var optionsBuilder = new DbContextOptionsBuilder<DataContext>();
             optionsBuilder.UseSqlServer(_configuration.GetConnectionString("tst"));
             Context = new DataContext(optionsBuilder.Options);
         }
-                
+
+        protected async Task<string> GetAuthToken(LoginModel login)
+        {
+            var uri = "/api/User/AuthToken";
+            var content = new StringContent(JsonConvert.SerializeObject(login), Encoding.UTF8, "application/json");
+            var request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Content = content;
+            var response = await Client.SendAsync(request);
+            return response.Content.ReadAsStringAsync().Result;
+        }
+
         /// <summary>
         /// Before each integration test.
+        /// Sets up HttpClient for accessing REST-API.
         /// Sets up test users.
         /// </summary>
         /// <returns></returns>
         [TestInitialize]
         public async Task Initialize()
         {
+            _factory = new WebApplicationFactory<Startup>();
+            Client = _factory.CreateClient();
             await SetUpUsers();
         }
 
@@ -67,6 +88,7 @@ namespace MSTest.IntegrationTests
         public async Task Cleanup() 
         {
             await CleanupUsers();
+            _factory.Dispose();
         }
 
         private async Task SetUpUsers()
