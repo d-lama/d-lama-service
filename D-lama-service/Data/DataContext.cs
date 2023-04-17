@@ -16,8 +16,8 @@ namespace Data
 
         public DbSet<Project> Projects { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<DataPointSet> DataPointSets { get; set; }
-        public DbSet<LabelSet> LabelSets { get; set; }
+        public DbSet<TextDataPoint> TextDataPoints { get; set; }
+        public DbSet<Label> Labels { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

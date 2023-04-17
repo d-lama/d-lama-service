@@ -4,9 +4,9 @@ using d_lama_service.Repositories.Core;
 namespace d_lama_service.Repositories.ProjectRepositories
 {
     /// <summary>
-    /// IDataPointSetRepository Interface.
+    /// ILabelSetRepositoryy Interface.
     /// </summary>
-    public interface IDataPointSetRepository : IRepository<DataPointSet>
+    public interface ILabelRepository : IRepository<Label>
     {
     }
 }

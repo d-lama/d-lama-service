@@ -14,6 +14,7 @@ using d_lama_service;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Newtonsoft.Json;
 using d_lama_service.Models.UserViewModels;
+using Data.ProjectEntities;
 
 namespace Test.IntegrationTests
 {
@@ -124,6 +125,10 @@ namespace Test.IntegrationTests
             public string Password { get; set; }
             public bool IsAdmin { get; set; }   
             public int Id { get; set; }
+
+            // Collection navigation containing dependents
+            public ICollection<Project> Projects { get; } = new List<Project>();
+            public ICollection<TextDataPoint> TextDataPoints { get; } = new List<TextDataPoint>();
 
             public TestUser(string email, string password, bool isAdmin)
             {

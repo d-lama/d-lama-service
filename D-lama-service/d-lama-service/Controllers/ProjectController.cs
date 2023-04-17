@@ -9,7 +9,6 @@ using d_lama_service.Middleware;
 using System.Net;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using System.IO.Compression;
 
 namespace d_lama_service.Controllers
 {
@@ -51,7 +50,7 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> GetMyProjects()
         {
             User user = await GetAuthenticatedUserAsync();
-            return Ok(await _unitOfWork.ProjectRepository.FindAsync(e => e.OwnerId == user.Id));
+            return Ok(await _unitOfWork.ProjectRepository.FindAsync(e => e.Owner == user));
         }
 
         /// <summary>
@@ -82,18 +81,26 @@ namespace d_lama_service.Controllers
         {
             User user = await GetAuthenticatedUserAsync();
 
-            var nameExists = (await _unitOfWork.ProjectRepository.FindAsync(e => e.ProjectName == projectForm.ProjectName)).Any();
+            var nameExists = (await _unitOfWork.ProjectRepository.FindAsync(e => e.Name == projectForm.ProjectName)).Any();
             if (nameExists)
             {
                 return BadRequest("A project with this name has already been created.");
             }
 
-            var project = new Project(projectForm.ProjectName, projectForm.Description, user.Id);
+            var project = new Project(projectForm.ProjectName, projectForm.Description);
             foreach (var labelSet in projectForm.LabelSets) 
             {
                 project.LabelSets.Add(new LabelSet(labelSet.Name,labelSet.Description));
             }
  
+            // for testing, this should be done after files have been uploaded
+            string testLabelEntry = "this is the first label";
+            var label = new Label(testLabelEntry);
+
+            var project = new Project(projectForm.ProjectName, projectForm.Description);
+
+            user.Projects.Add(project);
+            project.Labels.Add(label);
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
@@ -128,7 +135,7 @@ namespace d_lama_service.Controllers
                 }
             }
 
-            project.ProjectName = projectForm.ProjectName ?? project.ProjectName;
+            project.Name = projectForm.ProjectName ?? project.Name;
             project.Description = projectForm.Description ?? project.Description;
 
             _unitOfWork.ProjectRepository.Update(project);
@@ -233,7 +240,7 @@ namespace d_lama_service.Controllers
             }
 
             var user = await GetAuthenticatedUserAsync();
-            if (project.OwnerId != user.Id)
+            if (project.Owner != user)
             {
                 throw new RESTException(HttpStatusCode.Unauthorized, $"Only the owner of the project can modify it.");
             }
@@ -242,13 +249,13 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
-        /// Uploads a file and assigns the content to a given project.
+        /// Uploads a textual dataset and assigns the content to a given project.
         /// </summary>
         /// <param name="id"> The project ID. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [AdminAuthorize]
-        [HttpPost("{id:int}/UploadDataSet")]
-        public async Task<IActionResult> Upload(int projectId, IFormFile file)
+        [HttpPost("{projectId:int}/UploadText")]
+        public async Task<IActionResult> UploadText(int projectId, IFormFile uploadedFile)
         {
             // Check if the project exists
             var project = await _unitOfWork.ProjectRepository.GetAsync(projectId);
@@ -257,44 +264,118 @@ namespace d_lama_service.Controllers
                 return NotFound();
             }
 
-            // Check if a file was uploaded
-            if (file == null || file.Length == 0)
+            // Check if a uploadedFile was uploaded
+            if (uploadedFile == null || uploadedFile.Length == 0)
             {
-                return BadRequest("No file was uploaded");
+                return BadRequest("No file was uploaded.");
             }
 
-            // Check if the file is a zip archive
-            if (!file.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+            // check malware with library - not yet - first discuss which tool to use
+
+            // check if uploadedFile in supported format
+            string[] permittedExtensions = { ".csv", ".json", ".txt" };
+            var fileExt = Path.GetExtension(uploadedFile.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(fileExt) || !permittedExtensions.Contains(fileExt))
             {
-                return BadRequest("The uploaded file must be a zip archive");
+                // The extension is invalid ... discontinue processing the uploadedFile
+                return BadRequest("The uploaded file is not supported. Supported file extensions are ...");
             }
 
-            // Create a unique filename for the uploaded file
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            // validate data format
 
-            // Create a directory to store the uploaded file
-            var directoryPath = Path.Combine(_environment.WebRootPath, "uploads", projectId.ToString());
-            Directory.CreateDirectory(directoryPath);
 
-            // Save the uploaded file to the directory
-            var filePath = Path.Combine(directoryPath, fileName);
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            // update database entry
+
+            // return OK to user
+
+            // storing the uploadedFile on disk and saving it in the DB should be done in a single transaction
+
+            // in the DB we should only have the name of the uploadedFile and not the entire path
+
+
+            _unitOfWork.ProjectRepository.Update(project);
+            await _unitOfWork.SaveAsync();
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Uploads a set of images and assigns them to a given project.
+        /// </summary>
+        /// <param name="id"> The project ID. </param>
+        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        [AdminAuthorize]
+        [HttpPost("{projectId:int}/UploadImages")]
+        public async Task<IActionResult> UploadImages(int projectId, IFormFile uploadedFile)
+        {
+            // Check if the project exists
+            var project = await _unitOfWork.ProjectRepository.GetAsync(projectId);
+            if (project == null)
             {
-                await file.CopyToAsync(fileStream);
+                return NotFound();
             }
 
-            // Unzip the uploaded file and store its contents locally
-            var extractPath = Path.Combine(directoryPath, "extracted");
+            // Check if a uploadedFile was uploaded
+            if (uploadedFile == null || uploadedFile.Length == 0)
+            {
+                return BadRequest("No file was uploaded.");
+            }
+
+            // check malware with library - not yet - first discuss which tool to use
+
+            // check if uploadedFile in supported format
+            string[] permittedExtensions = { ".zip" };
+            var fileExt = Path.GetExtension(uploadedFile.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(fileExt) || !permittedExtensions.Contains(fileExt))
+            {
+                // The extension is invalid ... discontinue processing the uploadedFile
+                return BadRequest("The uploaded file is not supported. Supported file extensions are ...");
+            }
+
+            // check if uploadedFile already exists
+
+            // if exists - exit or update ?
+            // if does not exist - determine uploadedFile name - unique and not from user 
+            string myUniqueFileName = string.Format(@"{0}.txt", Guid.NewGuid());
+            string fileName = Guid.NewGuid().ToString() + Path.GetExtension(uploadedFile.FileName);
+            // - make sure the uploadedFile name is unique by checking that such a name does not exist
+
+            const string STORAGE_DIR = "some-dir";
+
+            // storage for the uploadedFile should not be the same as the project - e.g /some-other-dir/project-id/data-name
+            string[] storagePath = { STORAGE_DIR, projectId.ToString() };
+            var storageDir = Path.Join(storagePath);
+            Directory.CreateDirectory(storageDir);
+
+            // store uploadedFile on disk 
+            var filePath = Path.Combine(myUniqueFileName);
+            using (var stream = System.IO.File.Create(filePath))
+            {
+                await uploadedFile.CopyToAsync(stream);
+            }
+
+            // update database entry
+
+            // return OK to user
+
+            // storing the uploadedFile on disk and saving it in the DB should be done in a single transaction
+
+            // in the DB we should only have the name of the uploadedFile and not the entire path
+
+            // Unzip the uploaded uploadedFile and store its contents locally
+
+            /*
+            var extractPath = Path.Combine(storageDir, "extracted");
             Directory.CreateDirectory(extractPath);
 
             using (ZipArchive archive = new ZipArchive(new FileStream(filePath, FileMode.Open)))
             {
                 foreach (ZipArchiveEntry entry in archive.Entries)
                 {
-                    // Check if the entry is a file
+                    // Check if the entry is a uploadedFile
                     if (!string.IsNullOrEmpty(entry.Name))
                     {
-                        // Check if the file is a jpg, png, or csv file
+                        // Check if the uploadedFile is a jpg, png, or csv uploadedFile
                         if (!entry.Name.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
                             && !entry.Name.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
                             && !entry.Name.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
@@ -319,19 +400,11 @@ namespace d_lama_service.Controllers
                 }
             }
 
-            // Check if the zip archive contains at least one image or csv file
-            if (!Directory.EnumerateFiles(extractPath, "*.jpg", SearchOption.AllDirectories).Any()
-                && !Directory.EnumerateFiles(extractPath, "*.png", SearchOption.AllDirectories).Any()
-                && !Directory.EnumerateFiles(extractPath, "*.csv", SearchOption.AllDirectories).Any())
-            {
-                return BadRequest("The zip archive must contain at least one image or csv file");
-            }
-
             // Update the project's metadata to include the extracted files
-            project.ExtractedPath = extractPath;
+
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
-
+            */
             return Ok();
         }
 

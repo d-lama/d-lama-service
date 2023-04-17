@@ -498,8 +498,9 @@ namespace Test.IntegrationTests
 
         private async Task SetUpProjects() 
         {
-            _adminProject = new Project("AdminProject","My Description", Admin.Id);
+            _adminProject = new Project("AdminProject","My Description");
             _adminProject.LabelSets.Add(new LabelSet("TestSet", "TestDesc"));
+            Admin.Projects.Add(_adminProject);
             await Context.AddAsync(_adminProject);
             await Context.SaveChangesAsync();
         }
