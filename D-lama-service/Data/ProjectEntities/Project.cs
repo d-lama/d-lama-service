@@ -9,26 +9,28 @@ namespace Data.ProjectEntities
     public class Project : Entity
     {
         [Required]
-        public string ProjectName { get; set; }
+        public string Name { get; set; }
         [Required]
         public string Description { get; set; }
         [Required]
-        public int OwnerId { get; set; }
-        [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedDate { get; set; }
+        [Required]
+        bool isReady { get; set; }
 
-        // navigation (EF core relationship mapping)
-        public ICollection<DataPointSet> DataPointSets { get; }
-        public ICollection<LabelSet> LabelSets { get; }
+        // Required foreign key property
+        public int OwnerId { get; set; }
+        // Required reference navigation to principal
+        public User Owner { get; set; } = null!;
+        // Collections navigation containing dependents
+        public ICollection<TextDataPoint> TextDataPoints { get; } = new List<TextDataPoint>();
+        public ICollection<Label> Labels { get; } = new List<Label>();
 
-        public Project(string projectName, string description, int ownerId)
+        public Project(string name, string description)
         {
-            ProjectName = projectName;
+            Name = name;
             Description = description;
-            OwnerId = ownerId;
-            DataPointSets = new List<DataPointSet>();
-            LabelSets = new List<LabelSet>();
+            isReady = false;
         }
     }
 }

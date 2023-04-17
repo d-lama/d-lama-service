@@ -358,7 +358,8 @@ namespace Test.IntegrationTests
 
         private async Task SetUpProjects() 
         {
-            _adminProject = new Project("AdminProject","My Description", Admin.Id);
+            _adminProject = new Project("AdminProject","My Description");
+            Admin.Projects.Add(_adminProject);
             await Context.AddAsync(_adminProject);
             await Context.SaveChangesAsync();
         }
@@ -367,7 +368,7 @@ namespace Test.IntegrationTests
         {
             try
             {
-                var testProject = await Context.Projects.Where(e => e.ProjectName == _testProjectName).FirstAsync();
+                var testProject = await Context.Projects.Where(e => e.Name == _testProjectName).FirstAsync();
                 if (testProject != null)
                 {
                     Context.Remove(testProject);
