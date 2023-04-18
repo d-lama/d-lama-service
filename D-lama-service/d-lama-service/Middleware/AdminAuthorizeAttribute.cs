@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace d_lama_service.Attributes
+namespace d_lama_service.Middleware
 {
     /// <summary>
     /// AdminAuthorizeAttribute adds middleware logic for autenticating Admins.

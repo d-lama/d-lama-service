@@ -29,6 +29,9 @@ namespace d_lama_service.Repositories.Core
         /// <returns> All entities which have matched the predicate. </returns>
         Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
 
+        Task<TEntity?> GetDetailsAsync(int id, params Expression<Func<TEntity, object>>[] includeProperties);
+
+
         /// <summary>
         /// Updates and entity.
         /// </summary>

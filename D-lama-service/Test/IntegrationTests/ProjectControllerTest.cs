@@ -151,7 +151,7 @@ namespace Test.IntegrationTests
         {
             // Arrange
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
-            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test" }), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test", LabelSets = new List<LabelSetChangeModel> { } }), Encoding.UTF8, "application/json");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _apiRoute);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Content = content;
@@ -185,7 +185,7 @@ namespace Test.IntegrationTests
         {
             // Arrange
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
-            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test" }), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test", LabelSets = new List<LabelSetChangeModel> { } }), Encoding.UTF8, "application/json");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _apiRoute);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Content = content;
@@ -202,7 +202,7 @@ namespace Test.IntegrationTests
         {
             // Arrange
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
-            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test" }), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test", LabelSets = new List<LabelSetChangeModel> { } }), Encoding.UTF8, "application/json");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _apiRoute);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Content = content;
@@ -293,6 +293,43 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
+        public async Task EditProject_CorrectAdmin_Nothing()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(new EditProjectModel { }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task EditProject_CorrectAdmin_LabelSet()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var labelSetChanges = new LabelSetChangeModel { Id = _adminProject.LabelSets.First().Id, Description = "..." };
+            var content = new StringContent(JsonConvert.SerializeObject(new EditProjectModel { LabeSetChanges = new LabelSetChangeModel[] { labelSetChanges } }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
         public async Task DeleteProject_NotAdmin()
         {
             // Arrange
@@ -356,29 +393,131 @@ namespace Test.IntegrationTests
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
         }
 
+        [TestMethod]
+        public async Task AddLabels_InvalidRequest()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/Labels";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var content = new StringContent(JsonConvert.SerializeObject(null), Encoding.UTF8, "application/json");
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task AddLabels_WrongAdmin()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/Labels";
+            var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var content = new StringContent(JsonConvert.SerializeObject(new LabelSetModel[] { new LabelSetModel { Name = "My new Label" } }), Encoding.UTF8, "application/json");
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task AddLabels_ValidRequest()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/Labels";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var content = new StringContent(JsonConvert.SerializeObject(new LabelSetModel[] { new LabelSetModel { Name = "My new Label" } }), Encoding.UTF8, "application/json");
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+
+        [TestMethod]
+        public async Task RemoveLabels_WrongAdmin()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/Labels/" + _adminProject.LabelSets.First().Id;
+            var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task RemoveLabels_InvalidId()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/Labels/-1";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task RemoveLabels_ValidId()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/Labels/" + _adminProject.LabelSets.First().Id;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
         private async Task SetUpProjects() 
         {
             _adminProject = new Project("AdminProject","My Description", Admin.Id);
+            _adminProject.LabelSets.Add(new LabelSet("TestSet", "TestDesc"));
             await Context.AddAsync(_adminProject);
             await Context.SaveChangesAsync();
         }
 
         private async Task CleanupProjects() 
         {
-            try
+            try { ReloadContext(); } catch { }
+            var testProject = await Context.Projects.Where(e => e.ProjectName == _testProjectName).FirstOrDefaultAsync();
+            if (testProject != null)
             {
-                var testProject = await Context.Projects.Where(e => e.ProjectName == _testProjectName).FirstAsync();
-                if (testProject != null)
-                {
-                    Context.Remove(testProject);
-                }
-                if (await Context.Projects.FindAsync(_adminProject.Id) != null)
-                {
-                    Context.Remove(_adminProject);
-                    await Context.SaveChangesAsync();
-                }
+                Context.Remove(testProject);
             }
-            catch { }
+            var adminProj = await Context.Projects.FindAsync(_adminProject.Id);
+            if (adminProj != null)
+            {
+                Context.Remove(adminProj);
+                await Context.SaveChangesAsync();
+            }
         }
     }
 }
