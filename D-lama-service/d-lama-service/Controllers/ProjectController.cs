@@ -11,6 +11,7 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using System.Runtime.CompilerServices;
+using d_lama_service.DataProcessing;
 
 namespace d_lama_service.Controllers
 {
@@ -275,9 +276,9 @@ namespace d_lama_service.Controllers
             // check malware with library - not yet - first discuss which tool to use
 
             // check if uploadedFile in supported format
-            string[] permittedExtensions = { ".csv", ".json", ".txt" };
-            var fileExt = Path.GetExtension(uploadedFile.FileName).ToLowerInvariant();
-            if (string.IsNullOrEmpty(fileExt) || !permittedExtensions.Contains(fileExt))
+            DataSetReader dataSetReader = new DataSetReader(uploadedFile);
+
+            if (!dataSetReader.IsValidFormat())
             {
                 // The extension is invalid ... discontinue processing the uploadedFile
                 return BadRequest("The uploaded file is not supported. Supported file extensions are ...");
@@ -285,45 +286,12 @@ namespace d_lama_service.Controllers
 
             // validate data format
 
-
-            // read txt; DataPoints separated by new line
-            if (fileExt == ".txt")
+            // read data into database
+            ;
+            if (!await dataSetReader.ReadFileAsync(project, _unitOfWork))
             {
-                var encoding = Encoding.UTF8;
-                using (var reader = new StreamReader(uploadedFile.OpenReadStream(), encoding))
-                {
-                    int row = 0;
-                    while (!reader.EndOfStream)
-                    {
-                        var line = await reader.ReadLineAsync();
-                        await AddDataPoint(project, line, row);
-                        row++;
-                    }
-                }
-            }
-
-            // read csv; DataPoints separated by commas
-            if (fileExt == ".csv")
-            {
-                var encoding = Encoding.UTF8;
-                using (var reader = new StreamReader(uploadedFile.OpenReadStream(), encoding))
-                {
-                    while (!reader.EndOfStream)
-                    {
-                        var line = await reader.ReadLineAsync();
-                        var entries = line.Split(",");
-                        foreach (var entry in entries)
-                        {
-
-                        }
-                    }
-                }
-            }
-
-            // read json
-            if (fileExt == ".json")
-            {
-
+                // The file could not be loaded to the database.
+                return BadRequest("The file could not be loaded to the database.");
             }
 
             // update database entry
@@ -454,14 +422,6 @@ namespace d_lama_service.Controllers
         {
             var userId = int.Parse(HttpContext.User.FindFirst(Tokenizer.UserIdClaim)?.Value!); // on error throw
             return (await _unitOfWork.UserRepository.GetAsync(userId))!;
-        }
-
-        private async Task AddDataPoint(Project project, string content, int row)
-        {
-            var dataPoint = new TextDataPoint(content, row);
-            _unitOfWork.TextDataPointRepository.Update(dataPoint);
-            project.TextDataPoints.Add(dataPoint);
-            await _unitOfWork.SaveAsync();
         }
     }
 }
