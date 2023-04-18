@@ -29,8 +29,13 @@ namespace d_lama_service.Repositories.Core
         /// <returns> All entities which have matched the predicate. </returns>
         Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
 
+        /// <summary>
+        /// Gets the details from an entity (with joining).
+        /// </summary>
+        /// <param name="id"> The id of the entity. </param>
+        /// <param name="includeProperties"> The properties which should be included. </param>
+        /// <returns> The detailed entity if found, else null. </returns>
         Task<TEntity?> GetDetailsAsync(int id, params Expression<Func<TEntity, object>>[] includeProperties);
-
 
         /// <summary>
         /// Updates and entity.
