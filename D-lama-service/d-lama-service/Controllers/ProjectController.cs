@@ -204,7 +204,7 @@ namespace d_lama_service.Controllers
                 return BadRequest("The file could not be loaded to the database.");
             }
 
-            // update database entry
+            // update database metadata
 
             // return OK to user
 
