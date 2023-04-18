@@ -7,6 +7,8 @@ using Data;
 using Microsoft.AspNetCore.Authorization;
 using d_lama_service.Attributes;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace d_lama_service.Controllers
 {
@@ -87,15 +89,12 @@ namespace d_lama_service.Controllers
             }
 
             // for testing, this should be done after files have been uploaded
-            string testDataPointEntry = "this is the first data point";
-            var dataPoint = new TextDataPoint(testDataPointEntry, 0);
             string testLabelEntry = "this is the first label";
             var label = new Label(testLabelEntry);
 
             var project = new Project(projectForm.ProjectName, projectForm.Description);
 
             user.Projects.Add(project);
-            project.TextDataPoints.Add(dataPoint);
             project.Labels.Add(label);
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
@@ -196,6 +195,46 @@ namespace d_lama_service.Controllers
 
             // validate data format
 
+
+            // read txt; DataPoints separated by new line
+            if (fileExt == ".txt")
+            {
+                var encoding = Encoding.UTF8;
+                using (var reader = new StreamReader(uploadedFile.OpenReadStream(), encoding))
+                {
+                    int row = 0;
+                    while (!reader.EndOfStream)
+                    {
+                        var line = await reader.ReadLineAsync();
+                        await AddDataPoint(project, line, row);
+                        row++;
+                    }
+                }
+            }
+
+            // read csv; DataPoints separated by commas
+            if (fileExt == ".csv")
+            {
+                var encoding = Encoding.UTF8;
+                using (var reader = new StreamReader(uploadedFile.OpenReadStream(), encoding))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = await reader.ReadLineAsync();
+                        var entries = line.Split(",");
+                        foreach (var entry in entries)
+                        {
+
+                        }
+                    }
+                }
+            }
+
+            // read json
+            if (fileExt == ".json")
+            {
+
+            }
 
             // update database entry
 
@@ -325,6 +364,14 @@ namespace d_lama_service.Controllers
         {
             var userId = int.Parse(HttpContext.User.FindFirst(Tokenizer.UserIdClaim)?.Value!); // on error throw
             return (await _unitOfWork.UserRepository.GetAsync(userId))!;
+        }
+
+        private async Task AddDataPoint(Project project, string content, int row)
+        {
+            var dataPoint = new TextDataPoint(content, row);
+            _unitOfWork.TextDataPointRepository.Update(dataPoint);
+            project.TextDataPoints.Add(dataPoint);
+            await _unitOfWork.SaveAsync();
         }
     }
 }

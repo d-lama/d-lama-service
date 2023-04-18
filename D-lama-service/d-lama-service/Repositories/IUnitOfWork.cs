@@ -20,12 +20,12 @@ namespace d_lama_service.Repositories
         /// <summary>
         /// Gets the TextDataPointRepository.
         /// </summary>
-        ITextDataPointRepository DataPointSetRepository { get; }
+        ITextDataPointRepository TextDataPointRepository { get; }
 
         /// <summary>
         /// Gets the LabelRepository.
         /// </summary>
-        ILabelRepository LabelSetRepository { get; }
+        ILabelRepository LabelRepository { get; }
 
         /// <summary>
         /// Saves the context.
