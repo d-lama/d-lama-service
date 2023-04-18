@@ -12,8 +12,8 @@ namespace d_lama_service.Repositories
         private DataContext _context;
         private IUserRepository? _userRepository;
         private IProjectRepository? _projectRepository;
-        private ITextDataPointRepository? _dataPointSetRepository;
-        private ILabelRepository? _labelSetRepository;
+        private ITextDataPointRepository? _textDataPointRepository;
+        private ILabelRepository? _labelRepository;
         // all repositories here ...
 
         /// <summary>
@@ -61,30 +61,30 @@ namespace d_lama_service.Repositories
         /// <summary>
         /// TextDataPointRepository access with lazy loading.
         /// </summary>
-        public ITextDataPointRepository DataPointSetRepository
+        public ITextDataPointRepository TextDataPointRepository
         {
             get
             {
-                if (_dataPointSetRepository == null)
+                if (_textDataPointRepository == null)
                 {
-                    _dataPointSetRepository = new TextDataPointRepository(_context);
+                    _textDataPointRepository = new TextDataPointRepository(_context);
                 }
-                return _dataPointSetRepository;
+                return _textDataPointRepository;
             }
         }
 
         /// <summary>
         /// LabelRepository access with lazy loading.
         /// </summary>
-        public ILabelRepository LabelSetRepository
+        public ILabelRepository LabelRepository
         {
             get
             {
-                if (_labelSetRepository == null)
+                if (_labelRepository == null)
                 {
-                    _labelSetRepository = new LabelRepository(_context);
+                    _labelRepository = new LabelRepository(_context);
                 }
-                return _labelSetRepository;
+                return _labelRepository;
             }
         }
 
