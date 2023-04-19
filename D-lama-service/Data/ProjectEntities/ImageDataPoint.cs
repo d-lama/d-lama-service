@@ -10,10 +10,12 @@ namespace Data.ProjectEntities
         [Required]
         public string Path { get; set; }
 
-        public ImageDataPoint(string path, int dataSetId, int row)
+        public ImageDataPoint(string path, int dataPointIndex)
         {
             Path = path;
-            Row = row;
+            DataPointIndex = dataPointIndex;
+            UpdateDate = DateTime.Now;
+            Version = 1;
         }
     }
 }

@@ -18,10 +18,12 @@ namespace Data.ProjectEntities
         public User? Labeler { get; set; }
         public Label? Label { get; set; }
 
-        public TextDataPoint(string content, int row)
+        public TextDataPoint(string content, int dataPointIndex)
         {
             Content = content;
-            Row = row;
+            DataPointIndex = dataPointIndex;
+            UpdateDate = DateTime.Now;
+            Version = 1;
         }
     }
 }

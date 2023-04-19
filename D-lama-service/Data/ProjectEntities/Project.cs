@@ -14,9 +14,11 @@ namespace Data.ProjectEntities
         public string Description { get; set; }
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public DateTime CreatedDate { get; set; }
+        public DateTime CreationDate { get; set; }
         [Required]
-        bool isReady { get; set; }
+        public DateTime UpdateDate { get; set; }
+        [Required]
+        public bool isReady { get; set; }
 
         // Required foreign key property
         public int OwnerId { get; set; }
@@ -30,6 +32,7 @@ namespace Data.ProjectEntities
         {
             Name = name;
             Description = description;
+            UpdateDate = DateTime.Now;
             isReady = false;
         }
     }

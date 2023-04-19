@@ -36,7 +36,9 @@ namespace Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "getutcdate()"),
+                    CreationDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "getutcdate()"),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    isReady = table.Column<bool>(type: "bit", nullable: false),
                     OwnerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -71,40 +73,56 @@ namespace Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TextDataPoints",
+                name: "DataPoint",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    DataPointIndex = table.Column<int>(type: "int", nullable: false),
+                    CreationDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "getutcdate()"),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Version = table.Column<int>(type: "int", nullable: false),
+                    Discriminator = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProjectId = table.Column<int>(type: "int", nullable: true),
                     LabelerId = table.Column<int>(type: "int", nullable: true),
-                    LabelId = table.Column<int>(type: "int", nullable: true),
-                    Row = table.Column<int>(type: "int", nullable: false),
-                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Version = table.Column<int>(type: "int", nullable: false)
+                    LabelId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TextDataPoints", x => x.Id);
+                    table.PrimaryKey("PK_DataPoint", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TextDataPoints_Labels_LabelId",
+                        name: "FK_DataPoint_Labels_LabelId",
                         column: x => x.LabelId,
                         principalTable: "Labels",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_TextDataPoints_Projects_ProjectId",
+                        name: "FK_DataPoint_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TextDataPoints_Users_LabelerId",
+                        name: "FK_DataPoint_Users_LabelerId",
                         column: x => x.LabelerId,
                         principalTable: "Users",
                         principalColumn: "Id");
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DataPoint_LabelerId",
+                table: "DataPoint",
+                column: "LabelerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DataPoint_LabelId",
+                table: "DataPoint",
+                column: "LabelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DataPoint_ProjectId",
+                table: "DataPoint",
+                column: "ProjectId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Labels_ProjectId",
@@ -115,27 +133,12 @@ namespace Data.Migrations
                 name: "IX_Projects_OwnerId",
                 table: "Projects",
                 column: "OwnerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TextDataPoints_LabelerId",
-                table: "TextDataPoints",
-                column: "LabelerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TextDataPoints_LabelId",
-                table: "TextDataPoints",
-                column: "LabelId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TextDataPoints_ProjectId",
-                table: "TextDataPoints",
-                column: "ProjectId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "TextDataPoints");
+                name: "DataPoint");
 
             migrationBuilder.DropTable(
                 name: "Labels");

@@ -9,15 +9,13 @@ namespace Data.ProjectEntities
     public abstract class DataPoint : Entity
     {
         [Required]
-        public int Row { get; set; }
+        public int DataPointIndex { get; set; }
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public DateTime CreationTime { get; set; } // on create
+        public DateTime CreationDate { get; set; } // on create
         [Required]
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        public DateTime UpdateTime { get; set; } // on update
+        public DateTime UpdateDate { get; set; } // on update
         [Required]
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public int Version { get; set; } // increment per update
     }
 }
