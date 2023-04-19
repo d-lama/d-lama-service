@@ -38,14 +38,14 @@ namespace d_lama_service.DataProcessing
             {
                 using (reader)
                 {
-                    int row = 0;
+                    int dataPointIndex = 0;
                     while (!reader.EndOfStream)
                     {
                         var line = await reader.ReadLineAsync();
                         if (line != null)
                         {
-                            await AddDataPoint(project, unitOfWork, line, row);
-                            row++;
+                            await AddDataPoint(project, unitOfWork, line, dataPointIndex);
+                            dataPointIndex++;
                         }
                     }
                     return reader.EndOfStream;
@@ -57,13 +57,17 @@ namespace d_lama_service.DataProcessing
             {
                 using (reader)
                 {
+                    int dataPointIndex = 0;
                     while (!reader.EndOfStream)
                     {
                         var line = await reader.ReadLineAsync();
-                        var entries = line.Split(",");
-                        foreach (var entry in entries)
-                        {
-
+                        if (line != null) {
+                            var entries = line.Split(",");
+                            foreach (var entry in entries)
+                            {
+                                await AddDataPoint(project, unitOfWork, line, dataPointIndex);
+                                dataPointIndex++;
+                            }
                         }
                     }
                     return reader.EndOfStream;
