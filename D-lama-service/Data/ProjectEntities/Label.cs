@@ -8,7 +8,8 @@ namespace Data.ProjectEntities
     public class Label : Entity
     {
         [Required]
-        public string Content { get; set; }
+        public string Name { get; set; }
+        public string? Description { get; set; }
 
         // Required foreign key property
         public int ProjectId { get; set; }
@@ -17,9 +18,10 @@ namespace Data.ProjectEntities
         // Collections navigation containing dependents
         public ICollection<TextDataPoint> TextDataPoints { get; } = new List<TextDataPoint>();
 
-        public Label(string content)
+        public Label(string name, string? description)
         {
-            Content = content;
+            Name = name;
+            Description = description;
         }
 
     }

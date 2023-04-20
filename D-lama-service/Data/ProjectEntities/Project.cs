@@ -5,21 +5,20 @@ namespace Data.ProjectEntities
 {
     /// <summary>
     /// Project entity.
-    /// </summary>W
+    /// </summary>
     public class Project : Entity
     {
         [Required]
         public string Name { get; set; }
         [Required]
         public string Description { get; set; }
-
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreationDate { get; set; }
         [Required]
         public DateTime UpdateDate { get; set; }
         [Required]
-        public bool isReady { get; set; }
+        public bool IsReady { get; set; }
 
         // Required foreign key property
         public int OwnerId { get; set; }
@@ -33,10 +32,8 @@ namespace Data.ProjectEntities
         {
             Name = name;
             Description = description;
-            OwnerId = ownerId;
-            LabelSets = new List<LabelSet>();
-            UpdateDate = DateTime.Now;
-            isReady = false;
+            UpdateDate = DateTime.UtcNow;
+            IsReady = false;
         }
     }
 }

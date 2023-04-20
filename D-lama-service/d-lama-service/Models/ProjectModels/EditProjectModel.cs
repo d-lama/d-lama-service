@@ -8,6 +8,6 @@ namespace d_lama_service.Models.ProjectModels
         
         public string? Description { get; set; }
         
-        public LabelSetChangeModel[]? LabeSetChanges { get; set; }
+        public LabelChangeModel[]? LabeSetChanges { get; set; }
     }
 }
