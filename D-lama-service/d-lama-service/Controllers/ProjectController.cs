@@ -177,7 +177,8 @@ namespace d_lama_service.Controllers
                 return NotFound();
             }
 
-            // Check if project, already has a data set file uploaded
+            // Check if project, already has a data set file uploaded, or just append? Important for DataPointIndex
+            // Maybe add a PUT endpoint for overwriting exisiting data
 
             // Check if a uploadedFile was uploaded
             if (uploadedFile == null || uploadedFile.Length == 0)
