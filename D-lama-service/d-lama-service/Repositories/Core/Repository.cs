@@ -38,6 +38,19 @@ namespace d_lama_service.Repositories.Core
             return await Entities.Where(predicate).ToListAsync();
         }
 
+        public async Task<TEntity?> GetDetailsAsync(int id, params Expression<Func<TEntity, object>>[] includeProperties) 
+        {
+            var entities = includeProperties.Aggregate(Entities.AsQueryable(), (current, includeProperty) => current.Include(includeProperty));
+            try
+            {
+                return await entities.FirstAsync(e => e.Id == id); ;
+            }
+            catch 
+            {
+                return null;
+            } 
+        }
+
         public void Update(TEntity entity)
         {
             Entities.Update(entity);

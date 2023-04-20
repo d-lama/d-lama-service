@@ -40,7 +40,6 @@ namespace Test.UnitTests
             Assert.AreNotEqual(hash, hash3);
         }
 
-
         [TestMethod]
         public void GenerateSaltTest()
         {

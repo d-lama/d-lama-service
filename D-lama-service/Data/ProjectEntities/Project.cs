@@ -10,10 +10,13 @@ namespace Data.ProjectEntities
     {
         [Required]
         public string ProjectName { get; set; }
+
         [Required]
         public string Description { get; set; }
+
         [Required]
         public int OwnerId { get; set; }
+
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreatedDate { get; set; }
