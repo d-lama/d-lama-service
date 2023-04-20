@@ -177,6 +177,8 @@ namespace d_lama_service.Controllers
                 return NotFound();
             }
 
+            // Check if project, already has a data set file uploaded
+
             // Check if a uploadedFile was uploaded
             if (uploadedFile == null || uploadedFile.Length == 0)
             {

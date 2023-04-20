@@ -14,7 +14,7 @@ namespace Data.ProjectEntities
         {
             Path = path;
             DataPointIndex = dataPointIndex;
-            UpdateDate = DateTime.Now;
+            UpdateDate = DateTime.UtcNow;
             Version = 1;
         }
     }

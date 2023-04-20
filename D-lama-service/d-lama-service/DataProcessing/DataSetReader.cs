@@ -83,6 +83,8 @@ namespace d_lama_service.DataProcessing
                 }
                 return reader.EndOfStream;
             }
+
+            reader.Close();
             return false;
         }
 
