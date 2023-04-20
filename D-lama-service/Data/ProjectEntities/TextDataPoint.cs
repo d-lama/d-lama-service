@@ -22,7 +22,7 @@ namespace Data.ProjectEntities
         {
             Content = content;
             DataPointIndex = dataPointIndex;
-            UpdateDate = DateTime.Now;
+            UpdateDate = DateTime.UtcNow;
             Version = 1;
         }
     }
