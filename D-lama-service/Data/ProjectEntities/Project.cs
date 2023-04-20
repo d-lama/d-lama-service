@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Data.ProjectEntities
 {
@@ -23,6 +24,7 @@ namespace Data.ProjectEntities
         // Required foreign key property
         public int OwnerId { get; set; }
         // Required reference navigation to principal
+        [JsonIgnore]
         public User Owner { get; set; } = null!;
         // Collections navigation containing dependents
         public ICollection<TextDataPoint> TextDataPoints { get; } = new List<TextDataPoint>();

@@ -147,7 +147,7 @@ namespace Test.IntegrationTests
         {
             // Arrange
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
-            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test", LabelSets = new List<LabelChangeModel> { } }), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test", Labels = new List<LabelChangeModel> { } }), Encoding.UTF8, "application/json");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _apiRoute);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Content = content;
@@ -181,7 +181,7 @@ namespace Test.IntegrationTests
         {
             // Arrange
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
-            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test", LabelSets = new List<LabelChangeModel> { } }), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test", Labels = new List<LabelChangeModel> { } }), Encoding.UTF8, "application/json");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _apiRoute);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Content = content;
@@ -198,7 +198,7 @@ namespace Test.IntegrationTests
         {
             // Arrange
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
-            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test", LabelSets = new List<LabelChangeModel> { } }), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonConvert.SerializeObject(new ProjectModel { ProjectName = _testProjectName, Description = "Test", Labels = new List<LabelChangeModel> { } }), Encoding.UTF8, "application/json");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _apiRoute);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Content = content;

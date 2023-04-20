@@ -8,8 +8,7 @@ namespace d_lama_service.Models.ProjectModels
         [Required]
         public int Id { get; set; }
 
-        public DetailedProjectModel(Project project)
-            : base(project)
+        public DetailedProjectModel(Project project) : base(project)
         {
             Id = project.Id;
         }

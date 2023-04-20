@@ -53,7 +53,7 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> GetMyProjects()
         {
             User user = await GetAuthenticatedUserAsync();
-            return Ok(await _unitOfWork.ProjectRepository.FindAsync(e => e.Owner == user));
+            return Ok(await _unitOfWork.ProjectRepository.FindAsync(e => e.OwnerId == user.Id));
         }
 
         /// <summary>
@@ -92,9 +92,9 @@ namespace d_lama_service.Controllers
 
             var project = new Project(projectForm.ProjectName, projectForm.Description);
             user.Projects.Add(project);
-            foreach (var labelSet in projectForm.LabelSets) 
+            foreach (var label in projectForm.Labels) 
             {
-                project.Labels.Add(new Label(labelSet.Name, labelSet.Description));
+                project.Labels.Add(new Label(label.Name, label.Description));
             }
 
             _unitOfWork.ProjectRepository.Update(project);
@@ -269,35 +269,34 @@ namespace d_lama_service.Controllers
                 return BadRequest("No file was uploaded.");
             }
 
-            // check malware with library - not yet - first discuss which tool to use
+            // TODO: check malware with library - not yet - first discuss which tool to use
 
             // check if uploadedFile in supported format
-            DataSetReader dataSetReader = new DataSetReader(uploadedFile);
-
-            if (!dataSetReader.IsValidFormat())
+            DataSetReader dataSetReader = new DataSetReader();
+            if (!dataSetReader.IsValidFormat(uploadedFile))
             {
                 // The extension is invalid ... discontinue processing the uploadedFile
-                return BadRequest("The uploaded file is not supported. Supported file extensions are ...");
+                return BadRequest("The uploaded file is not supported. Supported file extensions are .txt, .csv, .json");
             }
 
-            // validate data format
+            // TODO: validate data format, header?
 
             // read data into database
-            ;
-            if (!await dataSetReader.ReadFileAsync(project, _unitOfWork))
+            ICollection<string> textDataPoints = await dataSetReader.ReadFileAsync(uploadedFile);
+
+            if (textDataPoints == null || textDataPoints.Count == 0)
             {
                 // The file could not be loaded to the database.
-                return BadRequest("The file could not be loaded to the database.");
+                return BadRequest("The file could not be read or is empty.");
             }
-
-            // update database metadata
-
-            // return OK to user
-
-            // storing the uploadedFile on disk and saving it in the DB should be done in a single transaction
-
-            // in the DB we should only have the name of the uploadedFile and not the entire path
-
+            
+            var presentDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == project.Id);
+            var index = presentDataPoints.Count();
+            foreach (var textDataPoint in textDataPoints)
+            {
+                project.TextDataPoints.Add(CreateTextDataPoint(textDataPoint, index));
+                index++;
+            }
 
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
@@ -418,6 +417,13 @@ namespace d_lama_service.Controllers
         {
             var userId = int.Parse(HttpContext.User.FindFirst(Tokenizer.UserIdClaim)?.Value!); // on error throw
             return (await _unitOfWork.UserRepository.GetAsync(userId))!;
+        }
+
+        private TextDataPoint CreateTextDataPoint(string content, int row)
+        {
+            var dataPoint = new TextDataPoint(content, row);
+            _unitOfWork.TextDataPointRepository.Update(dataPoint);
+            return dataPoint;
         }
     }
 }

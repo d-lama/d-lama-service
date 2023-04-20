@@ -11,89 +11,62 @@ namespace d_lama_service.DataProcessing
     {
         private readonly string[] permittedExtensions = { ".csv", ".json", ".txt" };
         private readonly Encoding encoding = Encoding.UTF8;
-        private IFormFile _file;
-        private string _fileExt;
 
-        public DataSetReader(IFormFile file)
+
+        public DataSetReader()
         {
-            this._file = file;
-            this._fileExt = Path.GetExtension(file.FileName).ToLowerInvariant();
+
         }
 
-        public bool IsValidFormat()
+        public bool IsValidFormat(IFormFile file)
         {
-            if (string.IsNullOrEmpty(_fileExt) || !permittedExtensions.Contains(_fileExt))
+            string fileExt = GetFileExtension(file);
+            if (string.IsNullOrEmpty(fileExt) || !permittedExtensions.Contains(fileExt))
             {
                 return false;
             }
             return true;
         }
 
-        public async Task<bool> ReadFileAsync(Project project, IUnitOfWork unitOfWork)
+        public async Task<ICollection<string>> ReadFileAsync(IFormFile file)
         {
-            var reader = new StreamReader(_file.OpenReadStream(), encoding);
+            ICollection<string> dataPoints = new List<string>();
+            var reader = new StreamReader(file.OpenReadStream(), encoding);
 
             // read txt; DataPoints separated by new line
-            if (_fileExt == ".txt")
+            if (GetFileExtension(file) == ".txt" || GetFileExtension(file) == ".csv")
             {
                 using (reader)
                 {
-                    int dataPointIndex = 0;
                     while (!reader.EndOfStream)
                     {
                         var line = await reader.ReadLineAsync();
-                        if (line != null)
+                        if (!string.IsNullOrWhiteSpace(line))
                         {
-                            await AddDataPoint(project, unitOfWork, line, dataPointIndex);
-                            dataPointIndex++;
+                            // TODO: maybe trim
+                            dataPoints.Add(line);
                         }
                     }
-                    return reader.EndOfStream;
-                }
-            }
-
-            // read csv; DataPoints separated by commas
-            if (_fileExt == ".csv")
-            {
-                using (reader)
-                {
-                    int dataPointIndex = 0;
-                    while (!reader.EndOfStream)
-                    {
-                        var line = await reader.ReadLineAsync();
-                        if (line != null) {
-                            var entries = line.Split(",");
-                            foreach (var entry in entries)
-                            {
-                                await AddDataPoint(project, unitOfWork, line, dataPointIndex);
-                                dataPointIndex++;
-                            }
-                        }
-                    }
-                    return reader.EndOfStream;
                 }
             }
 
             // read json
-            if (_fileExt == ".json")
+            if (GetFileExtension(file) == ".json")
             {
                 while (!reader.EndOfStream)
                 {
                     // TODO
                 }
-                return reader.EndOfStream;
             }
 
             reader.Close();
-            return false;
+            return dataPoints;
         }
 
-        private async Task AddDataPoint(Project project, IUnitOfWork unitOfWork, string content, int row)
+        private string GetFileExtension(IFormFile file)
         {
-            var dataPoint = new TextDataPoint(content, row);
-            unitOfWork.TextDataPointRepository.Update(dataPoint);
-            project.TextDataPoints.Add(dataPoint);
-            await unitOfWork.SaveAsync();
+            string fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            return fileExtension;
         }
     }
 }
