@@ -222,7 +222,7 @@ namespace Test.IntegrationTests
             // Arrange
             var uri = _apiRoute + "/" + _adminProject.Id;
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
-            var content = new StringContent(JsonConvert.SerializeObject(new EditProjectModel { ProjectName = _testProjectName, Description = "Test" }), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonConvert.SerializeObject(new EditProjectModel { Name = _testProjectName, Description = "Test" }), Encoding.UTF8, "application/json");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Content = content;
@@ -240,7 +240,7 @@ namespace Test.IntegrationTests
             // Arrange
             var uri = _apiRoute + "/-1";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
-            var content = new StringContent(JsonConvert.SerializeObject(new EditProjectModel { ProjectName = _testProjectName, Description = "Test" }), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonConvert.SerializeObject(new EditProjectModel { Name = _testProjectName, Description = "Test" }), Encoding.UTF8, "application/json");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Content = content;
@@ -258,7 +258,7 @@ namespace Test.IntegrationTests
             // Arrange
             var uri = _apiRoute + "/" + _adminProject.Id;
             var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
-            var content = new StringContent(JsonConvert.SerializeObject(new EditProjectModel { ProjectName = _testProjectName, Description = "Test" }), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonConvert.SerializeObject(new EditProjectModel { Name = _testProjectName, Description = "Test" }), Encoding.UTF8, "application/json");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Content = content;

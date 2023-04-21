@@ -13,6 +13,7 @@ namespace d_lama_service.Repositories
         private IUserRepository? _userRepository;
         private IProjectRepository? _projectRepository;
         private ITextDataPointRepository? _textDataPointRepository;
+        private IImageDataPointRepository? _imageDataPointRepository;
         private ILabelRepository? _labelRepository;
         // all repositories here ...
 
@@ -70,6 +71,21 @@ namespace d_lama_service.Repositories
                     _textDataPointRepository = new TextDataPointRepository(_context);
                 }
                 return _textDataPointRepository;
+            }
+        }
+
+        /// <summary>
+        /// ImageDataPointRepository access with lazy loading.
+        /// </summary>
+        public IImageDataPointRepository ImageDataPointRepository
+        {
+            get
+            {
+                if (_imageDataPointRepository == null)
+                {
+                    _imageDataPointRepository = new ImageDataPointRepository(_context);
+                }
+                return _imageDataPointRepository;
             }
         }
 

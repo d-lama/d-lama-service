@@ -23,6 +23,11 @@ namespace d_lama_service.Repositories
         ITextDataPointRepository TextDataPointRepository { get; }
 
         /// <summary>
+        /// Gets the ImageDataPointRepository.
+        /// </summary>
+        IImageDataPointRepository ImageDataPointRepository { get; }
+
+        /// <summary>
         /// Gets the LabelRepository.
         /// </summary>
         ILabelRepository LabelRepository { get; }
