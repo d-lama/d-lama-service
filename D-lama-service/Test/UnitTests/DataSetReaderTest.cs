@@ -20,11 +20,43 @@ namespace d_lama_service_tests.DataProcessing
         private readonly Encoding encoding = Encoding.UTF8;
 
         [TestMethod]
-        public void IsValidFormat_ValidExtension_ReturnsTrue()
+        public void IsValidFormat_ValidExtensionTxt_ReturnsTrue()
         {
             // Arrange
             var fileMock = new Mock<IFormFile>();
             fileMock.Setup(f => f.FileName).Returns("test.txt");
+            var file = fileMock.Object;
+            var dataSetReader = new DataSetReader();
+
+            // Act
+            var result = dataSetReader.IsValidFormat(file);
+
+            // Assert
+            Assert.IsTrue(result);
+        }
+
+        [TestMethod]
+        public void IsValidFormat_ValidExtensionCsv_ReturnsTrue()
+        {
+            // Arrange
+            var fileMock = new Mock<IFormFile>();
+            fileMock.Setup(f => f.FileName).Returns("test.csv");
+            var file = fileMock.Object;
+            var dataSetReader = new DataSetReader();
+
+            // Act
+            var result = dataSetReader.IsValidFormat(file);
+
+            // Assert
+            Assert.IsTrue(result);
+        }
+
+        [TestMethod]
+        public void IsValidFormat_ValidExtensionJson_ReturnsTrue()
+        {
+            // Arrange
+            var fileMock = new Mock<IFormFile>();
+            fileMock.Setup(f => f.FileName).Returns("test.json");
             var file = fileMock.Object;
             var dataSetReader = new DataSetReader();
 
@@ -100,6 +132,23 @@ namespace d_lama_service_tests.DataProcessing
         }
 
         [TestMethod]
+        public async Task ReadFileAsync_TxtFileWithEmptyLines_ReturnsCorrectDataPoints()
+        {
+            // Arrange
+            var inputDataPoints = new List<string> { "", "hello", "", "world", "" };
+            var expectedDataPoints = new List<string> { "hello", "world" };
+            var file = GetFormFile(expectedDataPoints, "test.txt");
+            var dataSetReader = new DataSetReader();
+
+            // Act
+            var result = await dataSetReader.ReadFileAsync(file);
+
+            // Assert
+            Assert.AreEqual(expectedDataPoints.Count, result.Count);
+            Assert.IsTrue(expectedDataPoints.All(dp => result.Contains(dp)));
+        }
+
+        [TestMethod]
         public async Task ReadFileAsync_EmptyTxtFile_ReturnsEmptyList()
         {
             // Arrange
@@ -114,6 +163,40 @@ namespace d_lama_service_tests.DataProcessing
             Assert.AreEqual(expectedDataPoints.Count, result.Count);
             Assert.IsTrue(expectedDataPoints.All(dp => result.Contains(dp)));
         }
+
+        [TestMethod]
+        public async Task ReadFileAsync_EmptyCsvFile_ReturnsEmptyList()
+        {
+            // Arrange
+            var expectedDataPoints = new List<string>();
+            var file = GetFormFile(expectedDataPoints, "test.csv");
+            var dataSetReader = new DataSetReader();
+
+            // Act
+            var result = await dataSetReader.ReadFileAsync(file);
+
+            // Assert
+            Assert.AreEqual(expectedDataPoints.Count, result.Count);
+            Assert.IsTrue(expectedDataPoints.All(dp => result.Contains(dp)));
+        }
+
+        [TestMethod]
+        public async Task ReadFileAsync_EmptyJsonFile_ReturnsEmptyList()
+        {
+            // Arrange
+            var expectedDataPoints = new List<string>();
+            var file = GetJsonFormFile(expectedDataPoints, "test.json");
+            var dataSetReader = new DataSetReader();
+
+            // Act
+            var result = await dataSetReader.ReadFileAsync(file);
+
+            // Assert
+            Assert.AreEqual(expectedDataPoints.Count, result.Count);
+            Assert.IsTrue(expectedDataPoints.All(dp => result.Contains(dp)));
+        }
+
+
 
         private IFormFile GetFormFile(List<string> dataPoints, string fileName)
         {

@@ -37,6 +37,12 @@ namespace d_lama_service.DataProcessing
         public async Task<ICollection<string>> ReadFileAsync(IFormFile file)
         {
             ICollection<string> dataPoints = new List<string>();
+
+            if (file.Length <= 0 )
+            { 
+                return dataPoints;
+            }
+
             var reader = new StreamReader(file.OpenReadStream(), encoding);
 
             // read txt; DataPoints separated by new line

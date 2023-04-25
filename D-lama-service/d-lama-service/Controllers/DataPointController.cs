@@ -34,12 +34,16 @@ namespace d_lama_service.Controllers
         /// Retrieves a list of all data points related to a project.
         /// </summary>
         /// <param name="projectId"> The ID of the project. </param>
-        /// <returns> A list of data points or Null if there are no data points at all.</returns>
+        /// <returns> 200 with a list of data points or 404 if there are no data points at all. </returns>
         [HttpGet]
         [Route("{projectId:int}")]
         public async Task<IActionResult> GetAllTextDataPoints(int projectId)
         {
             var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
+            if (!textDataPoints.Any())
+            {
+                return NotFound("No data points found for this project.");
+            }
             return Ok(textDataPoints);
         }
 
@@ -48,13 +52,17 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <param name="projectId"> The ID of the project. </param>
         /// <param name="dataPointIndex"> The index of the data point. </param>
-        /// <returns> A da</returns>
+        /// <returns> 200 with a list of data points or 404 if there are no data points at all. </returns>
         [HttpGet]
         [Route("{projectId:int}/{dataPointIndex:int}")]
         public async Task<IActionResult> GetTextDataPoint(int projectId, int dataPointIndex)
         {
             var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
-            return Ok(textDataPoints);
+            if (!textDataPoints.Any())
+            {
+                return NotFound("No data point found for this project and index.");
+            }
+            return Ok(textDataPoints.First());
         }
 
         /// <summary>
@@ -120,68 +128,6 @@ namespace d_lama_service.Controllers
 
             var presentDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == project.Id);
             var index = presentDataPoints.Count();
-            foreach (var textDataPoint in textDataPoints)
-            {
-                project.TextDataPoints.Add(CreateTextDataPoint(textDataPoint, index));
-                index++;
-            }
-
-            _unitOfWork.ProjectRepository.Update(project);
-            await _unitOfWork.SaveAsync();
-
-            return Ok();
-        }
-
-        /// <summary>
-        /// Replaces all datapoints of a projact with a given project ID.
-        /// </summary>
-        /// <param name="projectId"> The project ID. </param>
-        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
-        [TypeFilter(typeof(RESTExceptionFilter))]
-        [AdminAuthorize]
-        [HttpPut("{projectId:int}/ReplaceTextDataPoints")]
-        public async Task<IActionResult> ReplaceTextDataPoints(int projectId, IFormFile uploadedFile)
-        {
-            // Check if the project exists and if user is owner
-            var project = await GetProjectWithOwnerCheckAsync(projectId);
-
-            // Check if a uploadedFile was uploaded
-            if (uploadedFile == null || uploadedFile.Length == 0)
-            {
-                return BadRequest("No file was uploaded.");
-            }
-
-            // TODO: check malware with library - not yet - first discuss which tool to use
-
-            // check if uploadedFile in supported format
-            DataSetReader dataSetReader = new DataSetReader();
-            if (!dataSetReader.IsValidFormat(uploadedFile))
-            {
-                // The extension is invalid ... discontinue processing the uploadedFile
-                return BadRequest("The uploaded file is not supported. Supported file extensions are .txt, .csv, .json");
-            }
-
-            // TODO: validate data format, header?
-
-            // read data into database
-            ICollection<string> textDataPoints = await dataSetReader.ReadFileAsync(uploadedFile);
-
-            if (textDataPoints == null || textDataPoints.Count == 0)
-            {
-                // The file could not be loaded to the database.
-                return BadRequest("The file could not be read or is empty.");
-            }
-
-            // delete existing TextDataPoints
-            var presentDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == project.Id);
-            foreach (var textDataPoint in presentDataPoints)
-            {
-                _unitOfWork.TextDataPointRepository.Delete(textDataPoint);
-                // is this necessary? project.TextDataPoints.Remove(textDataPoint);
-            }
-
-            // create new TextDataPoints
-            var index = 0;
             foreach (var textDataPoint in textDataPoints)
             {
                 project.TextDataPoints.Add(CreateTextDataPoint(textDataPoint, index));

@@ -496,7 +496,8 @@ namespace Test.IntegrationTests
         {
             _adminProject = new Project("AdminProject","My Description");
             _adminProject.Labels.Add(new Label("TestSet", "TestDesc"));
-            Admin.Projects.Add(_adminProject);
+            var adminUser = await Context.Users.Where(u => u.Email == "admin@gmail.com").FirstOrDefaultAsync();
+            adminUser?.Projects.Add(_adminProject);
             await Context.AddAsync(_adminProject);
             await Context.SaveChangesAsync();
         }

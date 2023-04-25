@@ -8,10 +8,6 @@ using Microsoft.AspNetCore.Authorization;
 using d_lama_service.Middleware;
 using System.Net;
 using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
-using System.Text;
-using System.Runtime.CompilerServices;
-using d_lama_service.DataProcessing;
 
 namespace d_lama_service.Controllers
 {
