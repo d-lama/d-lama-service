@@ -1,11 +1,10 @@
-﻿using d_lama_service.Repositories;
-using Data.ProjectEntities;
-using System.Text;
+﻿using System.Text;
+using System.Text.Json;
 
 namespace d_lama_service.DataProcessing
 {
     /// <summary>
-    /// Reads data sets into the database.
+    /// Reads textual files and returns data points in a list.
     /// </summary>
     public class DataSetReader
     {
@@ -13,11 +12,13 @@ namespace d_lama_service.DataProcessing
         private readonly Encoding encoding = Encoding.UTF8;
 
 
-        public DataSetReader()
-        {
+        public DataSetReader() { }
 
-        }
-
+        /// <summary>
+        /// Checks id the given file is supported.
+        /// </summary>
+        /// <param name="file"> The project ID. </param>
+        /// <returns> True if file extension is supported, else False. </returns>
         public bool IsValidFormat(IFormFile file)
         {
             string fileExt = GetFileExtension(file);
@@ -28,6 +29,11 @@ namespace d_lama_service.DataProcessing
             return true;
         }
 
+        /// <summary>
+        /// Checks id the given file is supported.
+        /// </summary>
+        /// <param name="file"> The project ID. </param>
+        /// <returns> A List of data point strings or an empty list. </returns>
         public async Task<ICollection<string>> ReadFileAsync(IFormFile file)
         {
             ICollection<string> dataPoints = new List<string>();
@@ -43,7 +49,7 @@ namespace d_lama_service.DataProcessing
                         var line = await reader.ReadLineAsync();
                         if (!string.IsNullOrWhiteSpace(line))
                         {
-                            // TODO: maybe trim
+                            line.Trim();
                             dataPoints.Add(line);
                         }
                     }
@@ -53,9 +59,18 @@ namespace d_lama_service.DataProcessing
             // read json
             if (GetFileExtension(file) == ".json")
             {
-                while (!reader.EndOfStream)
+                using (JsonDocument document = await JsonDocument.ParseAsync(reader.BaseStream))
                 {
-                    // TODO
+                    JsonElement root = document.RootElement;
+                    foreach (JsonElement element in root.EnumerateArray())
+                    {
+                        var line = element.GetString();
+                        if (!string.IsNullOrWhiteSpace(line))
+                        {
+                            line.Trim();
+                            dataPoints.Add(line);
+                        }
+                    }
                 }
             }
 
