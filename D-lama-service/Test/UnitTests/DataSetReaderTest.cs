@@ -1,18 +1,10 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using Moq;
 using System.Text;
-using System.Threading.Tasks;
 using d_lama_service.DataProcessing;
 using Microsoft.AspNetCore.Http;
-using System.Collections;
 using System.Text.Json;
-using Microsoft.Extensions.Options;
-using System.Xml.Linq;
 
-namespace d_lama_service_tests.DataProcessing
+namespace Test.UnitTests
 {
     [TestClass]
     public class DataSetReaderTest
@@ -138,6 +130,40 @@ namespace d_lama_service_tests.DataProcessing
             var inputDataPoints = new List<string> { "", "hello", "", "world", "" };
             var expectedDataPoints = new List<string> { "hello", "world" };
             var file = GetFormFile(expectedDataPoints, "test.txt");
+            var dataSetReader = new DataSetReader();
+
+            // Act
+            var result = await dataSetReader.ReadFileAsync(file);
+
+            // Assert
+            Assert.AreEqual(expectedDataPoints.Count, result.Count);
+            Assert.IsTrue(expectedDataPoints.All(dp => result.Contains(dp)));
+        }
+
+        [TestMethod]
+        public async Task ReadFileAsync_CsvFileWithEmptyLines_ReturnsCorrectDataPoints()
+        {
+            // Arrange
+            var inputDataPoints = new List<string> { "", "hello", "", "world", "" };
+            var expectedDataPoints = new List<string> { "hello", "world" };
+            var file = GetFormFile(expectedDataPoints, "test.csv");
+            var dataSetReader = new DataSetReader();
+
+            // Act
+            var result = await dataSetReader.ReadFileAsync(file);
+
+            // Assert
+            Assert.AreEqual(expectedDataPoints.Count, result.Count);
+            Assert.IsTrue(expectedDataPoints.All(dp => result.Contains(dp)));
+        }
+
+        [TestMethod]
+        public async Task ReadFileAsync_JsonFileWithEmptyLines_ReturnsCorrectDataPoints()
+        {
+            // Arrange
+            var inputDataPoints = new List<string> { "", "hello", "", "world", "" };
+            var expectedDataPoints = new List<string> { "hello", "world" };
+            var file = GetJsonFormFile(expectedDataPoints, "test.json");
             var dataSetReader = new DataSetReader();
 
             // Act

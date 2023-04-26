@@ -1,10 +1,8 @@
 ﻿using d_lama_service.Models.ProjectModels;
 using d_lama_service.Models.UserViewModels;
 using Data.ProjectEntities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -318,13 +316,153 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task ReplaceTextDataPoints_NonAdmin_ReturnsUnauthorized()
+        public async Task EditTextDataPoint_NoLogin_ReturnsUnauthorized()
         {
+            await AddSomeTextDataPoints(4);
             // Arrange
-            await AddSomeTextDataPoints(3);
-            var uri = _apiRoute + "/" + _adminProject.Id + "/ReplaceTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + 2;
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task EditTextDataPoint_NonAdmin_ReturnsUnauthorized()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task EditTextDataPoint_WrongAdmin_ReturnsUnauthorized()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task EditTextDataPoint_CorrectAdmin_ReturnsOK()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task EditTextDataPoint_WrongProjectId_ReturnsNotFound()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + (-1) + "/EditTextDataPoint/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task EditTextDataPoint_WrongDataPointId_ReturnsNotFound()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + (-1);
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task DeleteAllTextDataPoints_NoLogin_ReturnsUnauthorized()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/DeleteTextDataPoints";
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task DeleteAllTextDataPoints_NonAdmin_ReturnsUnauthorized()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/DeleteTextDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Act
@@ -335,11 +473,189 @@ namespace Test.IntegrationTests
             await ClearTextDataPoints();
         }
 
+        [TestMethod]
+        public async Task DeleteAllTextDataPoints_WrongAdmin_ReturnsUnauthorized()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/DeleteTextDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task DeleteAllTextDataPoints_CorrectAdmin_ReturnsOK()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/DeleteTextDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task DeleteAllTextDataPoints_NoDataPointsPresent_ReturnsNotFound()
+        {
+            await ClearTextDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/DeleteTextDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task DeleteAllTextDataPoints_WrongProjectId_ReturnsNotFound()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + (-1) + "/DeleteTextDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task DeleteTextDataPointRange_NoLogin_ReturnsUnauthorized()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task DeleteTextDataPointRange_NonAdmin_ReturnsUnauthorized()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task DeleteTextDataPointRange_WrongAdmin_ReturnsUnauthorized()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task DeleteTextDataPointRange_CorrectAdmin_ReturnsOK()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task DeleteTextDataPointRange_NoDataPointsPresent_ReturnsNotFound()
+        {
+            await ClearTextDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
+        [TestMethod]
+        public async Task DeleteTextDataPointRange_WrongProjectId_ReturnsNotFound()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + (-1) + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            await ClearTextDataPoints();
+        }
+
         private async Task SetUpProjects()
         {
             _adminProject = new Project("AdminProject", "My Description");
             _adminProject.Labels.Add(new Label("TestSet", "TestDesc"));
-            var adminUser = await Context.Users.Where(u => u.Email == "admin@gmail.com").FirstOrDefaultAsync();
+            var adminUser = await Context.Users.Where(u => u.Email == Admin.Email).FirstOrDefaultAsync();
             adminUser?.Projects.Add(_adminProject);
             await Context.AddAsync(_adminProject);
             await Context.SaveChangesAsync();

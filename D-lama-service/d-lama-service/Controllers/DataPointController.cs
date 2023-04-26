@@ -147,6 +147,7 @@ namespace d_lama_service.Controllers
         /// <param name="dataPointIndex"> The data point index. </param>
         /// <param name="dataPointForm"> The model with the updated fields. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400 or 404. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
         [HttpPatch("{projectId:int}/EditTextDataPoint/{dataPointIndex:int}")]
         public async Task<IActionResult> EditTextDataPoint(int projectId, int dataPointIndex, [FromBody] EditTextDataPointModel dataPointForm)
@@ -177,6 +178,7 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <param name="projectId"> The project ID. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
         [HttpDelete]
         [Route("{projectId:int}/DeleteTextDataPoints")]
@@ -204,12 +206,13 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
-        /// Deletes all datapoints of a projact with a given project ID.
+        /// Deletes all datapoints of a project with a given project ID.
         /// </summary>
         /// <param name="projectId"> The project ID. </param>
         /// <param name="startIndex"> The start of index range (inclusive). </param>
         /// <param name="endIndex"> The end of index range (inclusive). </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
         [HttpDelete]
         [Route("{projectId:int}/DeleteTextDataPoints/{startIndex:int}/{endIndex:int}")]
@@ -239,18 +242,6 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
-        /// Uploads a set of images and assigns them to a given project.
-        /// </summary>
-        /// <param name="id"> The project ID. </param>
-        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
-        [AdminAuthorize]
-        [HttpPost("{projectId:int}/UploadImageDataPoints")]
-        public async Task<IActionResult> UploadImageDataPoints(int projectId, IFormFile uploadedFile)
-        {
-            return Ok();
-        }
-
-        /// <summary>
         /// Creates a textual data point with given content and index. 
         /// </summary>
         /// <param name="content"> Data point content. </param>
@@ -263,6 +254,7 @@ namespace d_lama_service.Controllers
             return dataPoint;
         }
 
+        // TODO: refactor, find solution for GetProjectWithOwnerCheckAsync that is a duplicate of the one in ProjectController
         /// <summary>
         /// Gets a project with checking if the user is owner of the project. 
         /// </summary>
