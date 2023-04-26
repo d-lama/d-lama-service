@@ -38,6 +38,7 @@ namespace Test.IntegrationTests
         [TestCleanup]
         public async Task AfterEach()
         {
+            await ClearTextDataPoints();
             await CleanupProjects();
         }
 
@@ -86,7 +87,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -118,7 +118,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -136,7 +135,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -168,7 +166,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -186,7 +183,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -196,6 +192,120 @@ namespace Test.IntegrationTests
             var uri = _apiRoute + "/" + _adminProject.Id + "/" + 1 + "/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CreateSingleTextDataPoint_NoLogin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPoint";
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CreateSingleTextDataPoint_NonAdmin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Content = content;
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CreateSingleTextDataPoint_WrongAdmin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Content = content;
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CreateSingleTextDataPoint_FirstEntry_ReturnsCreated()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Content = content;
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CreateSingleTextDataPoint_AppendToExisting_ReturnsCreated()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(3);
+            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Content = content;
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task CreateSingleTextDataPoint_WrongProjectId_ReturnsNotFound()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(3);
+            var uri = _apiRoute + "/" + (-1) + "/CreateSingleTextDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Content = content;
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             // Act
@@ -236,6 +346,25 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
+        public async Task UploadTextDataPoints_WrongAdmin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
+            var filePath = Path.Combine(_testFilesPath, "txt", "test_file_3_lines.txt");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
         public async Task UploadTextDataPoints_UnsupportedFile_ReturnsBadRequest()
         {
             // Arrange
@@ -252,7 +381,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -272,7 +400,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -292,7 +419,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -312,7 +438,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -331,7 +456,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -352,7 +476,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -373,7 +496,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -394,7 +516,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -415,7 +536,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -436,7 +556,26 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task EditTextDataPoint_NoDataPointsPresent_ReturnsNotFound()
+        {
             await ClearTextDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + (1);
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
         }
 
         [TestMethod]
@@ -452,7 +591,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -470,7 +608,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -488,7 +625,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -506,7 +642,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -524,7 +659,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -542,7 +676,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -558,7 +691,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -576,7 +708,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -594,7 +725,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -612,7 +742,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -630,7 +759,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         [TestMethod]
@@ -648,7 +776,6 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
-            await ClearTextDataPoints();
         }
 
         private async Task SetUpProjects()

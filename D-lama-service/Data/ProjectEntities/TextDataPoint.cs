@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Data.ProjectEntities
 {
@@ -13,6 +14,7 @@ namespace Data.ProjectEntities
         // Required foreign key property
         public int ProjectId { get; set; }
         // Required reference navigation to principal
+        [JsonIgnore]
         public Project Project { get; set; } = null!;
         // Optional reference navigation to principal
         public User? Labeler { get; set; }

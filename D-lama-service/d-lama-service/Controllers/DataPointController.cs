@@ -62,7 +62,8 @@ namespace d_lama_service.Controllers
             {
                 return NotFound("No data point found for this project and index.");
             }
-            return Ok(textDataPoints.First());
+            var textDataPoint = textDataPoints.First();
+            return Ok(new ReadTextDataPointModel(textDataPoint));
         }
 
         /// <summary>
@@ -84,6 +85,31 @@ namespace d_lama_service.Controllers
                 return NotFound("No data points found for this project and index range.");
             }
             return Ok(textDataPoints);
+        }
+
+        /// <summary>
+        /// Creates a single textual data point and assigns it to a given project.
+        /// </summary>
+        /// <param name="id"> The project ID. </param>
+        /// /// <param name="dataPointForm"> The data point form. </param>
+        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [AdminAuthorize]
+        [HttpPost("{projectId:int}/CreateSingleTextDataPoint")]
+        public async Task<IActionResult> CreateSingleTextDataPoint(int projectId, [FromBody] TextDataPointModel dataPointForm)
+        {
+            // Check if the project exists
+            var project = await GetProjectWithOwnerCheckAsync(projectId);
+
+            var presentDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == project.Id);
+            var index = presentDataPoints.Count();
+            var dataPoint = new TextDataPoint(dataPointForm.Content, index);
+            project.TextDataPoints.Add(dataPoint);
+            _unitOfWork.ProjectRepository.Update(project);
+            await _unitOfWork.SaveAsync();
+
+            var uri = nameof(GetTextDataPoint) + "/" + dataPoint.ProjectId + "/" + dataPoint.DataPointIndex;
+            return Created(uri, dataPoint.Content);
         }
 
         /// <summary>
