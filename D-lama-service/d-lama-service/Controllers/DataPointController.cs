@@ -35,10 +35,13 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <param name="projectId"> The ID of the project. </param>
         /// <returns> 200 with a list of data points or 404 if there are no data points at all. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet]
         [Route("{projectId:int}")]
-        public async Task<IActionResult> GetAllTextDataPoints(int projectId)
+        public async Task<IActionResult> GetAllTextDataPointsAsync(int projectId)
         {
+            var project = await GetProjectAsync(projectId);
+
             var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
             if (!textDataPoints.Any())
             {
@@ -48,15 +51,35 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
+        /// Retrieves a the number of data points related to a project.
+        /// </summary>
+        /// <param name="projectId"> The ID of the project. </param>
+        /// <returns> The number of text data points. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [HttpGet]
+        [Route("{projectId:int}/GetNumberOfTextDataPointsAsync")]
+        public async Task<IActionResult> GetNumberOfTextDataPointsAsync(int projectId)
+        {
+            var project = await GetProjectAsync(projectId);
+
+            // TODO: maybe define count in repository and not get whole list here
+            var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
+            return Ok(textDataPoints.Count());
+        }
+
+        /// <summary>
         /// Retrieves a data point related to a project by its index.
         /// </summary>
         /// <param name="projectId"> The ID of the project. </param>
         /// <param name="dataPointIndex"> The index of the data point. </param>
         /// <returns> 200 with a list of data points or 404 if there are no data points at all. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet]
         [Route("{projectId:int}/{dataPointIndex:int}")]
-        public async Task<IActionResult> GetTextDataPoint(int projectId, int dataPointIndex)
+        public async Task<IActionResult> GetTextDataPointAsync(int projectId, int dataPointIndex)
         {
+            var project = await GetProjectAsync(projectId);
+
             var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
             if (!textDataPoints.Any())
             {
@@ -73,10 +96,13 @@ namespace d_lama_service.Controllers
         /// <param name="startIndex"> The start of index range (inclusive). </param>
         /// <param name="endIndex"> The end of index range (inclusive). </param>
         /// <returns> A da</returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet]
         [Route("{projectId:int}/{startIndex:int}/{endIndex:int}")]
-        public async Task<IActionResult> GetTextDataPointRange(int projectId, int startIndex, int endIndex)
+        public async Task<IActionResult> GetTextDataPointRangeAsync(int projectId, int startIndex, int endIndex)
         {
+            var project = await GetProjectAsync(projectId);
+
             var textDataPoints = await _unitOfWork.TextDataPointRepository
                 .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex >= startIndex && e.DataPointIndex <= endIndex);
 
@@ -95,20 +121,19 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpPost("{projectId:int}/CreateSingleTextDataPoint")]
-        public async Task<IActionResult> CreateSingleTextDataPoint(int projectId, [FromBody] TextDataPointModel dataPointForm)
+        [HttpPost("{projectId:int}/CreateSingleTextDataPointAsync")]
+        public async Task<IActionResult> CreateSingleTextDataPointAsync(int projectId, [FromBody] TextDataPointModel dataPointForm)
         {
             // Check if the project exists
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
-            var presentDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == project.Id);
-            var index = presentDataPoints.Count();
+            var index = await GetNextTextDataPointIndexAsync(project);
             var dataPoint = new TextDataPoint(dataPointForm.Content, index);
             project.TextDataPoints.Add(dataPoint);
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
-            var uri = nameof(GetTextDataPoint) + "/" + dataPoint.ProjectId + "/" + dataPoint.DataPointIndex;
+            var uri = nameof(GetTextDataPointAsync) + "/" + dataPoint.ProjectId + "/" + dataPoint.DataPointIndex;
             return Created(uri, dataPoint.Content);
         }
 
@@ -119,8 +144,8 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpPost("{projectId:int}/UploadTextDataPoints")]
-        public async Task<IActionResult> UploadTextDataPoints(int projectId, IFormFile uploadedFile)
+        [HttpPost("{projectId:int}/UploadTextDataPointsAsync")]
+        public async Task<IActionResult> UploadTextDataPointsAsync(int projectId, IFormFile uploadedFile)
         {
             // Check if the project exists
             var project = await GetProjectWithOwnerCheckAsync(projectId);
@@ -152,8 +177,7 @@ namespace d_lama_service.Controllers
                 return BadRequest("The file could not be read or is empty.");
             }
 
-            var presentDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == project.Id);
-            var index = presentDataPoints.Count();
+            var index = await GetNextTextDataPointIndexAsync(project);
             foreach (var textDataPoint in textDataPoints)
             {
                 project.TextDataPoints.Add(CreateTextDataPoint(textDataPoint, index));
@@ -175,8 +199,8 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400 or 404. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpPatch("{projectId:int}/EditTextDataPoint/{dataPointIndex:int}")]
-        public async Task<IActionResult> EditTextDataPoint(int projectId, int dataPointIndex, [FromBody] EditTextDataPointModel dataPointForm)
+        [HttpPatch("{projectId:int}/EditTextDataPointAsync/{dataPointIndex:int}")]
+        public async Task<IActionResult> EditTextDataPointAsync(int projectId, int dataPointIndex, [FromBody] EditTextDataPointModel dataPointForm)
         {
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
@@ -208,7 +232,7 @@ namespace d_lama_service.Controllers
         [AdminAuthorize]
         [HttpDelete]
         [Route("{projectId:int}/DeleteTextDataPoints")]
-        public async Task<IActionResult> DeleteAllTextDataPoints(int projectId)
+        public async Task<IActionResult> DeleteAllTextDataPointsAsync(int projectId)
         {
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
@@ -242,7 +266,7 @@ namespace d_lama_service.Controllers
         [AdminAuthorize]
         [HttpDelete]
         [Route("{projectId:int}/DeleteTextDataPoints/{startIndex:int}/{endIndex:int}")]
-        public async Task<IActionResult> DeleteTextDataPointRange(int projectId, int startIndex, int endIndex)
+        public async Task<IActionResult> DeleteTextDataPointRangeAsync(int projectId, int startIndex, int endIndex)
         {
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
@@ -268,6 +292,19 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
+        /// Returns the next DataPointIndex for a TextDataPoint. 
+        /// </summary>
+        /// <param name="project"> The project. </param>
+        /// <returns> Next index. </returns>
+        private async Task<int> GetNextTextDataPointIndexAsync(Project project)
+        {
+            var presentDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == project.Id);
+            //  ?? 0 -> return 0 if the collection is empty
+            int index = presentDataPoints.OrderByDescending(dp => dp.DataPointIndex).FirstOrDefault()?.DataPointIndex + 1 ?? 0;
+            return index;
+        }
+
+        /// <summary>
         /// Creates a textual data point with given content and index. 
         /// </summary>
         /// <param name="content"> Data point content. </param>
@@ -280,6 +317,22 @@ namespace d_lama_service.Controllers
             return dataPoint;
         }
 
+        /// <summary>
+        /// Gets a project with checking if it exists. 
+        /// </summary>
+        /// <param name="projectId"> The id of the project. </param>
+        /// <returns> The found project. </returns>
+        /// <exception cref="RESTException"> Throws Rest Excetption if project is not found. </exception>
+        private async Task<Project> GetProjectAsync(int projectId)
+        {
+            Project? project = await _unitOfWork.ProjectRepository.GetAsync(projectId);
+            if (project == null)
+            {
+                throw new RESTException(HttpStatusCode.NotFound, $"Project with id {projectId} does not exist.");
+            }
+            return project;
+        }
+
         // TODO: refactor, find solution for GetProjectWithOwnerCheckAsync that is a duplicate of the one in ProjectController
         /// <summary>
         /// Gets a project with checking if the user is owner of the project. 
@@ -289,20 +342,7 @@ namespace d_lama_service.Controllers
         /// <exception cref="RESTException"> Throws Rest Excetption if project is not found or the current user is not the owner. </exception>
         private async Task<Project> GetProjectWithOwnerCheckAsync(int projectId, params Expression<Func<Project, object>>[] includes)
         {
-            Project? project;
-            if (includes.Any())
-            {
-                project = await _unitOfWork.ProjectRepository.GetDetailsAsync(projectId, includes);
-            }
-            else
-            {
-                project = await _unitOfWork.ProjectRepository.GetAsync(projectId);
-            }
-
-            if (project == null)
-            {
-                throw new RESTException(HttpStatusCode.NotFound, $"Project with id {projectId} does not exist.");
-            }
+            Project project = await GetProjectAsync(projectId);
 
             var user = await GetAuthenticatedUserAsync();
             if (project.Owner != user)

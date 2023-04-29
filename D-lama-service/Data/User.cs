@@ -37,7 +37,6 @@ namespace Data
 
         // Collection navigation containing dependents
         public ICollection<Project> Projects { get; } = new List<Project>();
-        public ICollection<TextDataPoint> TextDataPoints { get; } = new List<TextDataPoint>();
 
         public User(string email, string firstName, string lastName, string passwordHash, string passwordSalt, DateTime birthDate, bool isAdmin)
         {

@@ -15,8 +15,6 @@ namespace Data.ProjectEntities
         public int ProjectId { get; set; }
         // Required reference navigation to principal
         public Project Project { get; set; } = null!;
-        // Collections navigation containing dependents
-        public ICollection<TextDataPoint> TextDataPoints { get; } = new List<TextDataPoint>();
 
         public Label(string name, string? description)
         {

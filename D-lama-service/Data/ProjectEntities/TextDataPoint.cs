@@ -16,9 +16,6 @@ namespace Data.ProjectEntities
         // Required reference navigation to principal
         [JsonIgnore]
         public Project Project { get; set; } = null!;
-        // Optional reference navigation to principal
-        public User? Labeler { get; set; }
-        public Label? Label { get; set; }
 
         public TextDataPoint(string content, int dataPointIndex)
         {

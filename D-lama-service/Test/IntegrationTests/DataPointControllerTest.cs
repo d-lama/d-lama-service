@@ -106,6 +106,75 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
+        public async Task GetNumberOfTextDataPoints_NoLogin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/GetNumberOfTextDataPointsAsync";
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetNumberOfTextDataPoints_InvalidId_ReturnsNotFound()
+        {
+            // Arrange
+            var uri = _apiRoute + "/-1" + "/GetNumberOfTextDataPointsAsync";
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetNumberOfTextDataPoints_NoDataPointsPresent_ReturnsOK()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/GetNumberOfTextDataPointsAsync";
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var numberOfDataPoints = JsonConvert.DeserializeObject<int>(responseContent);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(0, numberOfDataPoints);
+        }
+
+        [TestMethod]
+        public async Task GetNumberOfTextDataPoints_DataPointsPresent_ReturnsOK()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(3);
+            var uri = _apiRoute + "/" + _adminProject.Id + "/GetNumberOfTextDataPointsAsync";
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var numberOfDataPoints = JsonConvert.DeserializeObject<int>(responseContent);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(3, numberOfDataPoints);
+        }
+
+        [TestMethod]
         public async Task GetTextDataPointByIndex_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
@@ -205,7 +274,7 @@ namespace Test.IntegrationTests
         public async Task CreateSingleTextDataPoint_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPoint";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPointAsync";
             var content = new StringContent(JsonConvert.SerializeObject(
                 new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
@@ -222,7 +291,7 @@ namespace Test.IntegrationTests
         public async Task CreateSingleTextDataPoint_NonAdmin_ReturnsUnauthorized()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPoint";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPointAsync";
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             var content = new StringContent(JsonConvert.SerializeObject(
                 new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
@@ -241,7 +310,7 @@ namespace Test.IntegrationTests
         public async Task CreateSingleTextDataPoint_WrongAdmin_ReturnsUnauthorized()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPoint";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPointAsync";
             var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
             var content = new StringContent(JsonConvert.SerializeObject(
                 new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
@@ -260,7 +329,7 @@ namespace Test.IntegrationTests
         public async Task CreateSingleTextDataPoint_FirstEntry_ReturnsCreated()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPoint";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPointAsync";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             var content = new StringContent(JsonConvert.SerializeObject(
                 new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
@@ -280,7 +349,7 @@ namespace Test.IntegrationTests
         {
             // Arrange
             await AddSomeTextDataPoints(3);
-            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPoint";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/CreateSingleTextDataPointAsync";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             var content = new StringContent(JsonConvert.SerializeObject(
                 new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
@@ -300,7 +369,7 @@ namespace Test.IntegrationTests
         {
             // Arrange
             await AddSomeTextDataPoints(3);
-            var uri = _apiRoute + "/" + (-1) + "/CreateSingleTextDataPoint";
+            var uri = _apiRoute + "/" + (-1) + "/CreateSingleTextDataPointAsync";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             var content = new StringContent(JsonConvert.SerializeObject(
                 new TextDataPointModel { Content = "Content of a new data point." }), Encoding.UTF8, "application/json");
@@ -319,7 +388,7 @@ namespace Test.IntegrationTests
         public async Task UploadTextDataPoints_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPointsAsync";
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
 
             // Act
@@ -333,7 +402,7 @@ namespace Test.IntegrationTests
         public async Task UploadTextDataPoints_NonAdmin_ReturnsUnauthorized()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPointsAsync";
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -349,7 +418,7 @@ namespace Test.IntegrationTests
         public async Task UploadTextDataPoints_WrongAdmin_ReturnsUnauthorized()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPointsAsync";
             var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
             var filePath = Path.Combine(_testFilesPath, "txt", "test_file_3_lines.txt");
             var content = GetMultipartFormDataContent(filePath);
@@ -368,7 +437,7 @@ namespace Test.IntegrationTests
         public async Task UploadTextDataPoints_UnsupportedFile_ReturnsBadRequest()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPointsAsync";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             var filePath = Path.Combine(_testFilesPath, "unsupported", "test_file.xlsx");
             var content = GetMultipartFormDataContent(filePath);
@@ -387,7 +456,7 @@ namespace Test.IntegrationTests
         public async Task UploadTextDataPoints_ValidTxtFile_ReturnsOK()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPointsAsync";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             var filePath = Path.Combine(_testFilesPath, "txt", "test_file_3_lines.txt");
             var content = GetMultipartFormDataContent(filePath);
@@ -406,7 +475,7 @@ namespace Test.IntegrationTests
         public async Task UploadTextDataPoints_ValidCsvFile_ReturnsOK()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPointsAsync";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             var filePath = Path.Combine(_testFilesPath, "csv", "test_file_3_lines.csv");
             var content = GetMultipartFormDataContent(filePath);
@@ -425,7 +494,7 @@ namespace Test.IntegrationTests
         public async Task UploadTextDataPoints_ValidJsonFile_ReturnsOK()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/UploadTextDataPointsAsync";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             var filePath = Path.Combine(_testFilesPath, "json", "test_file_3_lines.json");
             var content = GetMultipartFormDataContent(filePath);
@@ -445,7 +514,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + 2;
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPointAsync/" + 2;
             var content = new StringContent(JsonConvert.SerializeObject(
                 new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
@@ -463,7 +532,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + 2;
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPointAsync/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             var content = new StringContent(JsonConvert.SerializeObject(
                 new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
@@ -483,7 +552,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + 2;
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPointAsync/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
             var content = new StringContent(JsonConvert.SerializeObject(
                 new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
@@ -503,7 +572,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + 2;
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPointAsync/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             var content = new StringContent(JsonConvert.SerializeObject(
                 new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
@@ -523,7 +592,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + (-1) + "/EditTextDataPoint/" + 2;
+            var uri = _apiRoute + "/" + (-1) + "/EditTextDataPointAsync/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             var content = new StringContent(JsonConvert.SerializeObject(
                 new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
@@ -543,7 +612,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + (-1);
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPointAsync/" + (-1);
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             var content = new StringContent(JsonConvert.SerializeObject(
                 new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
@@ -563,7 +632,7 @@ namespace Test.IntegrationTests
         {
             await ClearTextDataPoints();
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPoint/" + (1);
+            var uri = _apiRoute + "/" + _adminProject.Id + "/EditTextDataPointAsync/" + (1);
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             var content = new StringContent(JsonConvert.SerializeObject(
                 new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
