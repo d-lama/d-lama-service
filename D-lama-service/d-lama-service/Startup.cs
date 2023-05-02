@@ -68,7 +68,7 @@ namespace d_lama_service
 
             services.AddTransient<IUnitOfWork, UnitOfWork>(); // DI
 
-            var connectionString = Configuration.GetConnectionString("prd")
+            var connectionString = Configuration.GetConnectionString("prd");
             if (_environment.IsDevelopment())
             {
                 connectionString = _environment["ASPNETCORE_TST"];
