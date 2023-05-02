@@ -68,16 +68,16 @@ namespace d_lama_service
 
             services.AddTransient<IUnitOfWork, UnitOfWork>(); // DI
 
-            var connectionIdentifier = "prd";
+            var connectionString = Configuration.GetConnectionString("prd")
             if (_environment.IsDevelopment())
             {
-                connectionIdentifier = "tst";
+                connectionString = _environment["ASPNETCORE_TST"];
             }
 
             services.AddDbContext<DataContext>(
                 options =>
                 {
-                    options.UseSqlServer(Configuration.GetConnectionString(connectionIdentifier));
+                    options.UseSqlServer(connectionString);
                 });
 
             services.AddAuthentication(options =>
