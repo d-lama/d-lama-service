@@ -1,4 +1,4 @@
-﻿using d_lama_service.Repositories;
+using d_lama_service.Repositories;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -68,16 +68,16 @@ namespace d_lama_service
 
             services.AddTransient<IUnitOfWork, UnitOfWork>(); // DI
 
-            var connectionString = Configuration.GetConnectionString("prd");
+            var connectionIdentifier = "prd";
             if (_environment.IsDevelopment())
             {
-                connectionString = _environment.GetEnvironmentVariables["ASPNETCORE_TST"];
+                connectionIdentifier = "tst";
             }
 
             services.AddDbContext<DataContext>(
                 options =>
                 {
-                    options.UseSqlServer(connectionString);
+                    options.UseSqlServer(Configuration.GetConnectionString(connectionIdentifier));
                 });
 
             services.AddAuthentication(options =>
@@ -118,12 +118,11 @@ namespace d_lama_service
             {
                 app.UseDeveloperExceptionPage();
             }
-            
+
             app.UseSwagger();
-                app.UseSwaggerUI(options => {
-                    options.OAuthUsePkce();
+            app.UseSwaggerUI(options => {
+                options.OAuthUsePkce();
             });
-            
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
