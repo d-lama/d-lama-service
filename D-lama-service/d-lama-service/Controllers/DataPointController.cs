@@ -160,22 +160,11 @@ namespace d_lama_service.Controllers
 
             // check if uploadedFile in supported format
             DataSetReader dataSetReader = new DataSetReader();
-            if (!dataSetReader.IsValidFormat(uploadedFile))
-            {
-                // The extension is invalid ... discontinue processing the uploadedFile
-                return BadRequest("The uploaded file is not supported. Supported file extensions are .txt, .csv, .json");
-            }
 
             // TODO: validate data format, header?
 
             // read data into database
             ICollection<string> textDataPoints = await dataSetReader.ReadFileAsync(uploadedFile);
-
-            if (textDataPoints == null || textDataPoints.Count == 0)
-            {
-                // The file could not be loaded to the database.
-                return BadRequest("The file could not be read or is empty.");
-            }
 
             var index = await GetNextTextDataPointIndexAsync(project);
             foreach (var textDataPoint in textDataPoints)
@@ -333,7 +322,6 @@ namespace d_lama_service.Controllers
             return project;
         }
 
-        // TODO: refactor, find solution for GetProjectWithOwnerCheckAsync that is a duplicate of the one in ProjectController
         /// <summary>
         /// Gets a project with checking if the user is owner of the project. 
         /// </summary>
