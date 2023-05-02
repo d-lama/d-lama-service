@@ -57,7 +57,7 @@ namespace d_lama_service.Controllers
         /// <returns> The number of text data points. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet]
-        [Route("{projectId:int}/GetNumberOfTextDataPointsAsync")]
+        [Route("{projectId:int}/GetNumberOfTextDataPoints")]
         public async Task<IActionResult> GetNumberOfTextDataPointsAsync(int projectId)
         {
             var project = await GetProjectAsync(projectId);
@@ -121,7 +121,7 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpPost("{projectId:int}/CreateSingleTextDataPointAsync")]
+        [HttpPost("{projectId:int}/CreateSingleTextDataPoint")]
         public async Task<IActionResult> CreateSingleTextDataPointAsync(int projectId, [FromBody] TextDataPointModel dataPointForm)
         {
             // Check if the project exists
@@ -144,7 +144,7 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpPost("{projectId:int}/UploadTextDataPointsAsync")]
+        [HttpPost("{projectId:int}/UploadTextDataPoints")]
         public async Task<IActionResult> UploadTextDataPointsAsync(int projectId, IFormFile uploadedFile)
         {
             // Check if the project exists
@@ -188,7 +188,7 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400 or 404. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpPatch("{projectId:int}/EditTextDataPointAsync/{dataPointIndex:int}")]
+        [HttpPatch("{projectId:int}/EditTextDataPoint/{dataPointIndex:int}")]
         public async Task<IActionResult> EditTextDataPointAsync(int projectId, int dataPointIndex, [FromBody] EditTextDataPointModel dataPointForm)
         {
             // Check if the project exists and if user is owner
