@@ -71,7 +71,7 @@ namespace d_lama_service
             var connectionString = Configuration.GetConnectionString("prd");
             if (_environment.IsDevelopment())
             {
-                connectionString = _environment["ASPNETCORE_TST"];
+                connectionString = _environment.GetEnvironmentVariable("ASPNETCORE_TST");
             }
 
             services.AddDbContext<DataContext>(
