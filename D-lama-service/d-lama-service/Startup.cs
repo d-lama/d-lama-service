@@ -116,12 +116,14 @@ namespace d_lama_service
 
             if (_environment.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI(options => {
-                    options.OAuthUsePkce();
-                });
                 app.UseDeveloperExceptionPage();
             }
+            
+            app.UseSwagger();
+                app.UseSwaggerUI(options => {
+                    options.OAuthUsePkce();
+            });
+            
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
