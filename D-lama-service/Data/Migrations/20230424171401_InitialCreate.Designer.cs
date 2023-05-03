@@ -4,6 +4,7 @@ using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230424171401_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -135,6 +137,12 @@ namespace Data.Migrations
                     b.Property<int>("DataPointIndex")
                         .HasColumnType("int");
 
+                    b.Property<int?>("LabelId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("LabelerId")
+                        .HasColumnType("int");
+
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
@@ -145,6 +153,10 @@ namespace Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LabelId");
+
+                    b.HasIndex("LabelerId");
 
                     b.HasIndex("ProjectId");
 
@@ -214,13 +226,30 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.ProjectEntities.TextDataPoint", b =>
                 {
+                    b.HasOne("Data.ProjectEntities.Label", "Label")
+                        .WithMany("TextDataPoints")
+                        .HasForeignKey("LabelId");
+
+                    b.HasOne("Data.User", "Labeler")
+                        .WithMany("TextDataPoints")
+                        .HasForeignKey("LabelerId");
+
                     b.HasOne("Data.ProjectEntities.Project", "Project")
                         .WithMany("TextDataPoints")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Label");
+
+                    b.Navigation("Labeler");
+
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Data.ProjectEntities.Label", b =>
+                {
+                    b.Navigation("TextDataPoints");
                 });
 
             modelBuilder.Entity("Data.ProjectEntities.Project", b =>
@@ -233,6 +262,8 @@ namespace Data.Migrations
             modelBuilder.Entity("Data.User", b =>
                 {
                     b.Navigation("Projects");
+
+                    b.Navigation("TextDataPoints");
                 });
 #pragma warning restore 612, 618
         }

@@ -18,14 +18,19 @@ namespace d_lama_service.Repositories
         IProjectRepository ProjectRepository { get; }
 
         /// <summary>
-        /// Gets the DataPointSetRepository.
+        /// Gets the TextDataPointRepository.
         /// </summary>
-        IDataPointSetRepository DataPointSetRepository { get; }
+        ITextDataPointRepository TextDataPointRepository { get; }
 
         /// <summary>
-        /// Gets the LabelSetRepository.
+        /// Gets the ImageDataPointRepository.
         /// </summary>
-        ILabelSetRepository LabelSetRepository { get; }
+        IImageDataPointRepository ImageDataPointRepository { get; }
+
+        /// <summary>
+        /// Gets the LabelRepository.
+        /// </summary>
+        ILabelRepository LabelRepository { get; }
 
         /// <summary>
         /// Saves the context.

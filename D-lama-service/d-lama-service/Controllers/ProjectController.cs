@@ -60,7 +60,7 @@ namespace d_lama_service.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get(int id)
         {
-            var project = await _unitOfWork.ProjectRepository.GetDetailsAsync(id, e => e.LabelSets);
+            var project = await _unitOfWork.ProjectRepository.GetDetailsAsync(id, e => e.Labels);
 
             if (project == null) 
             {
@@ -80,18 +80,19 @@ namespace d_lama_service.Controllers
         {
             User user = await GetAuthenticatedUserAsync();
 
-            var nameExists = (await _unitOfWork.ProjectRepository.FindAsync(e => e.ProjectName == projectForm.ProjectName)).Any();
+            var nameExists = (await _unitOfWork.ProjectRepository.FindAsync(e => e.Name == projectForm.ProjectName)).Any();
             if (nameExists)
             {
                 return BadRequest("A project with this name has already been created.");
             }
 
-            var project = new Project(projectForm.ProjectName, projectForm.Description, user.Id);
-            foreach (var labelSet in projectForm.LabelSets) 
+            var project = new Project(projectForm.ProjectName, projectForm.Description);
+            user.Projects.Add(project);
+            foreach (var label in projectForm.Labels) 
             {
-                project.LabelSets.Add(new LabelSet(labelSet.Name,labelSet.Description));
+                project.Labels.Add(new Label(label.Name, label.Description));
             }
- 
+
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
@@ -109,24 +110,24 @@ namespace d_lama_service.Controllers
         [HttpPatch("{id:int}")]
         public async Task<IActionResult> Edit(int id, [FromBody] EditProjectModel projectForm)
         {
-            var project = await GetProjectWithOwnerCheckAsync(id, e => e.LabelSets);
+            var project = await GetProjectWithOwnerCheckAsync(id, e => e.Labels);
 
             var labeSetChanges = projectForm.LabeSetChanges;
             if (labeSetChanges != null)
             { 
                 foreach (var change in labeSetChanges) 
                 {
-                    var labelSet = project.LabelSets.Where(e => e.Id == change.Id).FirstOrDefault();
-                    if (labelSet == null) 
+                    var label = project.Labels.Where(e => e.Id == change.Id).FirstOrDefault();
+                    if (label == null) 
                     {
-                        return NotFound($"LabelSet with id {change.Id} not found.");
+                        return NotFound($"Label with id {change.Id} not found.");
                     }
-                    labelSet.LabelSetName = change.Name ?? labelSet.LabelSetName;
-                    labelSet.Description = change.Description ?? labelSet.Description;
+                    label.Name = change.Name ?? label.Name;
+                    label.Description = change.Description ?? label.Description;
                 }
             }
 
-            project.ProjectName = projectForm.ProjectName ?? project.ProjectName;
+            project.Name = projectForm.Name ?? project.Name;
             project.Description = projectForm.Description ?? project.Description;
 
             _unitOfWork.ProjectRepository.Update(project);
@@ -171,7 +172,7 @@ namespace d_lama_service.Controllers
 
             foreach (var label in newLabels) 
             {
-                project.LabelSets.Add(new LabelSet(label.Name, label.Description));
+                project.Labels.Add(new Label(label.Name, label.Description));
             }
 
             _unitOfWork.ProjectRepository.Update(project);
@@ -194,14 +195,14 @@ namespace d_lama_service.Controllers
         {
             await GetProjectWithOwnerCheckAsync(id);
 
-            var label = await _unitOfWork.LabelSetRepository.GetAsync(labelId);
+            var label = await _unitOfWork.LabelRepository.GetAsync(labelId);
             if (label == null || label.ProjectId != id) 
             {
                 return NotFound();
             }
 
             // TODO: check if label already used and if so prohibit deletion
-            _unitOfWork.LabelSetRepository.Delete(label);
+            _unitOfWork.LabelRepository.Delete(label);
             await _unitOfWork.SaveAsync();
 
             return Ok();
@@ -231,7 +232,7 @@ namespace d_lama_service.Controllers
             }
 
             var user = await GetAuthenticatedUserAsync();
-            if (project.OwnerId != user.Id)
+            if (project.Owner != user)
             {
                 throw new RESTException(HttpStatusCode.Unauthorized, $"Only the owner of the project can modify it.");
             }

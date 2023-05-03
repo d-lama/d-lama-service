@@ -12,17 +12,17 @@ namespace d_lama_service.Models.ProjectModels
         public string Description { get; set; }
         
         [Required]
-        public List<LabelSetChangeModel> LabelSets { get; set; }
+        public List<LabelChangeModel> Labels { get; set; }
 
         public ProjectModel() { }
         public ProjectModel(Project project)
         {
-            ProjectName = project.ProjectName;
+            ProjectName = project.Name;
             Description = project.Description;
-            LabelSets = new List<LabelSetChangeModel>();
-            foreach (var labelSet in project.LabelSets) 
+            Labels = new List<LabelChangeModel>();
+            foreach (var label in project.Labels) 
             {
-                LabelSets.Add(new LabelSetChangeModel(labelSet));
+                Labels.Add(new LabelChangeModel(label));
             } 
         }
 

@@ -12,8 +12,9 @@ namespace d_lama_service.Repositories
         private DataContext _context;
         private IUserRepository? _userRepository;
         private IProjectRepository? _projectRepository;
-        private IDataPointSetRepository? _dataPointSetRepository;
-        private ILabelSetRepository? _labelSetRepository;
+        private ITextDataPointRepository? _textDataPointRepository;
+        private IImageDataPointRepository? _imageDataPointRepository;
+        private ILabelRepository? _labelRepository;
         // all repositories here ...
 
         /// <summary>
@@ -59,32 +60,47 @@ namespace d_lama_service.Repositories
         }
 
         /// <summary>
-        /// DataPointSetRepository access with lazy loading.
+        /// TextDataPointRepository access with lazy loading.
         /// </summary>
-        public IDataPointSetRepository DataPointSetRepository
+        public ITextDataPointRepository TextDataPointRepository
         {
             get
             {
-                if (_dataPointSetRepository == null)
+                if (_textDataPointRepository == null)
                 {
-                    _dataPointSetRepository = new DataPointSetRepository(_context);
+                    _textDataPointRepository = new TextDataPointRepository(_context);
                 }
-                return _dataPointSetRepository;
+                return _textDataPointRepository;
             }
         }
 
         /// <summary>
-        /// LabelSetRepository access with lazy loading.
+        /// ImageDataPointRepository access with lazy loading.
         /// </summary>
-        public ILabelSetRepository LabelSetRepository
+        public IImageDataPointRepository ImageDataPointRepository
         {
             get
             {
-                if (_labelSetRepository == null)
+                if (_imageDataPointRepository == null)
                 {
-                    _labelSetRepository = new LabelSetRepository(_context);
+                    _imageDataPointRepository = new ImageDataPointRepository(_context);
                 }
-                return _labelSetRepository;
+                return _imageDataPointRepository;
+            }
+        }
+
+        /// <summary>
+        /// LabelRepository access with lazy loading.
+        /// </summary>
+        public ILabelRepository LabelRepository
+        {
+            get
+            {
+                if (_labelRepository == null)
+                {
+                    _labelRepository = new LabelRepository(_context);
+                }
+                return _labelRepository;
             }
         }
 

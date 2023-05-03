@@ -1,12 +1,5 @@
 ﻿using Data.ProjectEntities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Data
 {
@@ -16,14 +9,23 @@ namespace Data
 
         public DbSet<Project> Projects { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<DataPointSet> DataPointSets { get; set; }
-        public DbSet<LabelSet> LabelSets { get; set; }
+        public DbSet<TextDataPoint> TextDataPoints { get; set; }
+        public DbSet<ImageDataPoint> ImageDataPoints { get; set; }
+        public DbSet<Label> Labels { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
             modelBuilder.Entity<Project>()
-                .Property(b => b.CreatedDate)
+                .Property(b => b.CreationDate)
+                .HasDefaultValueSql("getutcdate()");
+
+            modelBuilder.Entity<TextDataPoint>()
+                .Property(b => b.CreationDate)
+                .HasDefaultValueSql("getutcdate()");
+
+            modelBuilder.Entity<ImageDataPoint>()
+                .Property(b => b.CreationDate)
                 .HasDefaultValueSql("getutcdate()");
         }
     }

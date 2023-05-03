@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230417154153_InitDB")]
-    partial class InitDB
+    [Migration("20230429113253_RmLabelNavigtio")]
+    partial class RmLabelNavigtio
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -24,7 +24,7 @@ namespace Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("Data.ProjectEntities.DataPointSet", b =>
+            modelBuilder.Entity("Data.ProjectEntities.ImageDataPoint", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -32,21 +32,30 @@ namespace Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("DataPointSetName")
+                    b.Property<DateTime>("CreationDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getutcdate()");
+
+                    b.Property<int>("DataPointIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Path")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ProjectId")
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Version")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("DataPointSets");
+                    b.ToTable("ImageDataPoints");
                 });
 
-            modelBuilder.Entity("Data.ProjectEntities.LabelSet", b =>
+            modelBuilder.Entity("Data.ProjectEntities.Label", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -57,7 +66,7 @@ namespace Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("LabelSetName")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -68,7 +77,7 @@ namespace Data.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("LabelSets");
+                    b.ToTable("Labels");
                 });
 
             modelBuilder.Entity("Data.ProjectEntities.Project", b =>
@@ -79,7 +88,7 @@ namespace Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreationDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("getutcdate()");
@@ -88,16 +97,60 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsReady")
+                        .HasColumnType("bit");
 
-                    b.Property<string>("ProjectName")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("OwnerId");
+
                     b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("Data.ProjectEntities.TextDataPoint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreationDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getutcdate()");
+
+                    b.Property<int>("DataPointIndex")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("TextDataPoints");
                 });
 
             modelBuilder.Entity("Data.User", b =>
@@ -139,21 +192,10 @@ namespace Data.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Data.ProjectEntities.DataPointSet", b =>
+            modelBuilder.Entity("Data.ProjectEntities.Label", b =>
                 {
                     b.HasOne("Data.ProjectEntities.Project", "Project")
-                        .WithMany("DataPointSets")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("Data.ProjectEntities.LabelSet", b =>
-                {
-                    b.HasOne("Data.ProjectEntities.Project", "Project")
-                        .WithMany("LabelSets")
+                        .WithMany("Labels")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -163,9 +205,36 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.ProjectEntities.Project", b =>
                 {
-                    b.Navigation("DataPointSets");
+                    b.HasOne("Data.User", "Owner")
+                        .WithMany("Projects")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("LabelSets");
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Data.ProjectEntities.TextDataPoint", b =>
+                {
+                    b.HasOne("Data.ProjectEntities.Project", "Project")
+                        .WithMany("TextDataPoints")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Data.ProjectEntities.Project", b =>
+                {
+                    b.Navigation("Labels");
+
+                    b.Navigation("TextDataPoints");
+                });
+
+            modelBuilder.Entity("Data.User", b =>
+                {
+                    b.Navigation("Projects");
                 });
 #pragma warning restore 612, 618
         }

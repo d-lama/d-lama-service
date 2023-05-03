@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace d_lama_service.Models.ProjectModels
 {
-    public class LabelSetChangeModel
+    public class LabelChangeModel
     {
         [Required]
         public int Id { get; set; }
@@ -13,12 +13,12 @@ namespace d_lama_service.Models.ProjectModels
 
         public string? Description { get; set; }
 
-        public LabelSetChangeModel() { }
-        public LabelSetChangeModel(LabelSet labelSet) 
+        public LabelChangeModel() { }
+        public LabelChangeModel(Label label) 
         {
-            Id = labelSet.Id;
-            Name = labelSet.LabelSetName;
-            Description = labelSet.Description;
+            Id = label.Id;
+            Name = label.Name;
+            Description = label.Description;
         }
     }
 }

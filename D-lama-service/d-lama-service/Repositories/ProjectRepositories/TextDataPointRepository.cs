@@ -5,14 +5,14 @@ using Data.ProjectEntities;
 namespace d_lama_service.Repositories.ProjectRepositories
 {
     /// <summary>
-    /// LabelSetRepository Class.
+    /// TextDataPointRepository Class.
     /// </summary>
-    public class LabelSetRepository : Repository<LabelSet>, ILabelSetRepository
+    public class TextDataPointRepository : Repository<TextDataPoint>, ITextDataPointRepository
     {
         /// <summary>
-        /// Constructor of LabelSetRepository.
+        /// Constructor of TextDataPointRepository.
         /// </summary>
         /// <param name="context"> The DB context. </param>
-        public LabelSetRepository(DataContext context) : base(context) { }
+        public TextDataPointRepository(DataContext context) : base(context) { }
     }
 }
