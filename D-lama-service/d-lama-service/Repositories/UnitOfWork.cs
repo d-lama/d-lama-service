@@ -1,4 +1,5 @@
 ﻿using d_lama_service.Repositories;
+using d_lama_service.Repositories.Core;
 using d_lama_service.Repositories.ProjectRepositories;
 using Data;
 
@@ -15,6 +16,8 @@ namespace d_lama_service.Repositories
         private ITextDataPointRepository? _textDataPointRepository;
         private IImageDataPointRepository? _imageDataPointRepository;
         private ILabelRepository? _labelRepository;
+        private IDataPointRepository? _dataPointRepository;
+        private ILabeledDataPointRepository? _labeledDataPointRepository;
         // all repositories here ...
 
         /// <summary>
@@ -31,7 +34,6 @@ namespace d_lama_service.Repositories
         /// </summary>
         public IUserRepository UserRepository
         {
-            // lazy loading
             get
             {
 
@@ -101,6 +103,37 @@ namespace d_lama_service.Repositories
                     _labelRepository = new LabelRepository(_context);
                 }
                 return _labelRepository;
+            }
+        }
+
+
+        /// <summary>
+        /// DataPointRepository access with lazy loading.
+        /// </summary>
+        public IDataPointRepository DataPointRespitory
+        {
+            get
+            {
+                if (_dataPointRepository == null)
+                {
+                    _dataPointRepository = new DataPointRepository(_context);
+                }
+                return _dataPointRepository;
+            }
+        }
+
+        /// <summary>
+        /// LabledDataPointRepository access with lazy loading.
+        /// </summary>
+        public ILabeledDataPointRepository LabeledDataPointRepository
+        {
+            get
+            {
+                if (_labeledDataPointRepository == null)
+                {
+                    _labeledDataPointRepository = new LabeledDataPointRepository(_context);
+                }
+                return _labeledDataPointRepository;
             }
         }
 

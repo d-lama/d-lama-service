@@ -10,12 +10,23 @@ namespace Data.ProjectEntities
     {
         [Required]
         public int DataPointIndex { get; set; }
+
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime CreationDate { get; set; } // on create
+
         [Required]
         public DateTime UpdateDate { get; set; } // on update
+
         [Required]
         public int Version { get; set; } // increment per update
+
+        // Required foreign key property
+        public int ProjectId { get; set; }
+        // Required reference navigation to principal
+        public Project Project { get; set; } = null!;
+
+        public ICollection<LabeledDataPoint> LabeledDataPoints { get; } = new List<LabeledDataPoint>();
+
     }
 }
