@@ -22,10 +22,10 @@ namespace d_lama_service.Middleware
                 switch (restException.StatusCode) 
                 {
                     case HttpStatusCode.Unauthorized:
-                        context.Result = new UnauthorizedResult();
+                        context.Result = new UnauthorizedObjectResult(restException.Message);
                         break;
                     case HttpStatusCode.NotFound:
-                        context.Result = new NotFoundResult();
+                        context.Result = new NotFoundObjectResult(restException.Message);
                         break;
                 }
             }
