@@ -2,21 +2,16 @@
 
 namespace d_lama_service.DataProcessing
 {
-    public class JsonDataParser : IDataParser
+    public class JsonDataParser : DataParser
     {
-        private readonly string[] permittedExtensions = { ".json" };
+        private readonly string[] _permittedExtensions = { ".json" };
 
-        public bool IsValidFormat(IFormFile file)
+        public override bool IsValidFormat(IFormFile file, string[]? permittedExtensions = null)
         {
-            string fileExt = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (string.IsNullOrEmpty(fileExt) || !permittedExtensions.Contains(fileExt))
-            {
-                return false;
-            }
-            return true;
+            return base.IsValidFormat(file, _permittedExtensions);
         }
 
-        public async Task<ICollection<string>> ParseAsync(StreamReader reader)
+        public override async Task<ICollection<string>> ParseAsync(StreamReader reader)
         {
             ICollection<string> dataPoints = new List<string>();
 

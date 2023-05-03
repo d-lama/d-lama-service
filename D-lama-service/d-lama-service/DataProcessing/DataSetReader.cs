@@ -9,8 +9,8 @@ namespace d_lama_service.DataProcessing
     /// </summary>
     public class DataSetReader
     {
-        private readonly Encoding encoding = Encoding.UTF8;
-        private readonly IDictionary<string, IDataParser> parsers = new Dictionary<string, IDataParser>
+        private readonly Encoding _encoding = Encoding.UTF8;
+        private readonly IDictionary<string, DataParser> _parsers = new Dictionary<string, DataParser>
         {
             { ".txt", new TextDataParser() },
             { ".csv", new TextDataParser() },
@@ -32,11 +32,11 @@ namespace d_lama_service.DataProcessing
                 throw new RESTException(HttpStatusCode.BadRequest, $"The file {file.FileName} is empty.");
             }
 
-            var reader = new StreamReader(file.OpenReadStream(), encoding);
+            var reader = new StreamReader(file.OpenReadStream(), _encoding);
             var fileExt = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-            IDataParser? parser;
-            if (parsers.TryGetValue(fileExt, out parser) && parser.IsValidFormat(file))
+            DataParser? parser;
+            if (_parsers.TryGetValue(fileExt, out parser) && parser.IsValidFormat(file))
             {
                 var dataPoints = await parser.ParseAsync(reader);
                 reader.Close();
