@@ -1,4 +1,6 @@
-﻿namespace d_lama_service.Repositories
+﻿using d_lama_service.Repositories.ProjectRepositories;
+
+namespace d_lama_service.Repositories
 {
     /// <summary>
     /// Interface for the UnitOfWork.
@@ -6,14 +8,29 @@
     public interface IUnitOfWork : IAsyncDisposable
     {
         /// <summary>
-        /// Gets the ExampleRepository.
-        /// </summary>
-        IExampleRepository ExampleRepository{ get; }
-
-        /// <summary>
         /// Gets the UserRepository.
         /// </summary>
         IUserRepository UserRepository { get; }
+
+        /// <summary>
+        /// Gets the ProjectRepository.
+        /// </summary>
+        IProjectRepository ProjectRepository { get; }
+
+        /// <summary>
+        /// Gets the TextDataPointRepository.
+        /// </summary>
+        ITextDataPointRepository TextDataPointRepository { get; }
+
+        /// <summary>
+        /// Gets the ImageDataPointRepository.
+        /// </summary>
+        IImageDataPointRepository ImageDataPointRepository { get; }
+
+        /// <summary>
+        /// Gets the LabelRepository.
+        /// </summary>
+        ILabelRepository LabelRepository { get; }
 
         /// <summary>
         /// Saves the context.

@@ -1,5 +1,6 @@
-﻿using d_lama_service.Attributes;
+﻿using d_lama_service.Middleware;
 using d_lama_service.Models;
+using d_lama_service.Models.UserViewModels;
 using d_lama_service.Repositories;
 using Data;
 using Microsoft.AspNetCore.Authorization;
@@ -22,8 +23,9 @@ namespace d_lama_service.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _configuration;
-        private readonly int _iteration = 3;
         private readonly string _pepper;
+        private static readonly string Censored = "**********";
+        public static readonly int Iteration = 3;
 
         /// <summary>
         /// Constructor of the UserController.
@@ -47,16 +49,20 @@ namespace d_lama_service.Controllers
         [Route("AuthToken")]
         public async Task<IActionResult> AuthToken([FromBody] LoginModel loginRequest)
         {
-            var user = (await _unitOfWork.UserRepository.FindAsync(e => e.Email == loginRequest.Email)).FirstOrDefault();
-            if (user != null) 
+            try
             {
-                var hash = PasswordHasher.ComputeHash(loginRequest.Password, user.PasswordSalt, _pepper, _iteration);
-                if (hash == user.PasswordHash) 
+                var user = (await _unitOfWork.UserRepository.FindAsync(e => e.Email == loginRequest.Email)).First();
+                if (user != null)
                 {
-                    var token = Tokenizer.CreateToken(user, _configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], _configuration["Jwt:Key"]);
-                    return Ok(token);
+                    var hash = PasswordHasher.ComputeHash(loginRequest.Password, user.PasswordSalt, _pepper, Iteration);
+                    if (hash == user.PasswordHash)
+                    {
+                        var token = Tokenizer.CreateToken(user, _configuration["Jwt:Issuer"], _configuration["Jwt:Audience"], _configuration["Jwt:Key"]);
+                        return Ok(token);
+                    }
                 }
             }
+            catch { }
             return Unauthorized("Provided username and password did not match!");
         }
 
@@ -77,13 +83,13 @@ namespace d_lama_service.Controllers
             }
 
             var salt = PasswordHasher.GenerateSalt();
-            var hash = PasswordHasher.ComputeHash(registerRequest.Password,salt, _pepper, _iteration);
+            var hash = PasswordHasher.ComputeHash(registerRequest.Password,salt, _pepper, Iteration);
             var user = new User(registerRequest.Email, registerRequest.FirstName, registerRequest.LastName, hash, salt, registerRequest.BirthDate, registerRequest.IsAdmin);
             
             _unitOfWork.UserRepository.Update(user);
             await _unitOfWork.SaveAsync();
 
-            return Ok();
+            return Created(nameof(Get),null);
         }
 
         /// <summary>
@@ -91,11 +97,29 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <returns> The user. </returns>
         [HttpGet]
-        public async Task<IActionResult> Get() 
+        [Route("Me")]
+        public async Task<IActionResult> GetMe() 
         {
             User user = await GetAuthenticatedUserAsync();
-            user.PasswordSalt = "***";
-            user.PasswordHash = "***";
+            user.PasswordSalt = Censored;
+            user.PasswordHash = Censored;
+            return Ok(user);
+        }
+
+        /// <summary>
+        /// Gets a user by id.
+        /// </summary>
+        /// <returns> The user. </returns>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(int id)
+        {
+            User? user = await _unitOfWork.UserRepository.GetAsync(id);
+            if (user == null) 
+            {
+                return NotFound();
+            }
+            user.PasswordSalt = Censored;
+            user.PasswordHash = Censored;
             return Ok(user);
         }
 
@@ -104,18 +128,18 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <param name="modifiedUser"> The properties to update. </param>
         /// <returns> The updated user. </returns>
-        [HttpPatch]
-        public async Task<IActionResult> Edit([FromBody] EditUserModel modifiedUser) 
+        [HttpPatch("Me")]
+        public async Task<IActionResult> EditMe([FromBody] EditUserModel modifiedUser) 
         {
             User user = await GetAuthenticatedUserAsync();
             
             if (modifiedUser.Password != null)
             {
-                var hash = PasswordHasher.ComputeHash(modifiedUser.Password, user.PasswordSalt, _pepper, _iteration);
+                var hash = PasswordHasher.ComputeHash(modifiedUser.Password, user.PasswordSalt, _pepper, Iteration);
                 if (hash != user.PasswordHash) // change password
                 {
                     user.PasswordSalt = PasswordHasher.GenerateSalt();
-                    user.PasswordHash = PasswordHasher.ComputeHash(modifiedUser.Password, user.PasswordSalt, _pepper, _iteration);
+                    user.PasswordHash = PasswordHasher.ComputeHash(modifiedUser.Password, user.PasswordSalt, _pepper, Iteration);
                 }
             }
 
@@ -127,7 +151,7 @@ namespace d_lama_service.Controllers
             _unitOfWork.UserRepository.Update(user);
             await _unitOfWork.SaveAsync();
 
-            return await Get();
+            return await GetMe();
         }
 
         [HttpGet]

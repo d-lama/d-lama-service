@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 namespace d_lama_service.Repositories.Core
 {
     /// <summary>
-    /// The generic repository. 
+    /// The generic repository.
     /// </summary>
     /// <typeparam name="TEntity"> The entity type. </typeparam>
     public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity : Entity
@@ -38,9 +38,22 @@ namespace d_lama_service.Repositories.Core
             return await Entities.Where(predicate).ToListAsync();
         }
 
+        public async Task<TEntity?> GetDetailsAsync(int id, params Expression<Func<TEntity, object>>[] includeProperties) 
+        {
+            var entities = includeProperties.Aggregate(Entities.AsQueryable(), (current, includeProperty) => current.Include(includeProperty));
+            try
+            {
+                return await entities.FirstAsync(e => e.Id == id); ;
+            }
+            catch 
+            {
+                return null;
+            } 
+        }
+
         public void Update(TEntity entity)
         {
-            Entities.Update(entity); 
+            Entities.Update(entity);
         }
 
         public void UpdateRange(IEnumerable<TEntity> entities)

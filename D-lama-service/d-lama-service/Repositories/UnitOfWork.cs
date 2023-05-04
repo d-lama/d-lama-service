@@ -1,4 +1,6 @@
-﻿using Data;
+﻿using d_lama_service.Repositories;
+using d_lama_service.Repositories.ProjectRepositories;
+using Data;
 
 namespace d_lama_service.Repositories
 {
@@ -8,8 +10,12 @@ namespace d_lama_service.Repositories
     public class UnitOfWork : IUnitOfWork
     {
         private DataContext _context;
-        private IExampleRepository? _exampleRepository;
         private IUserRepository? _userRepository;
+        private IProjectRepository? _projectRepository;
+        private ITextDataPointRepository? _textDataPointRepository;
+        private IImageDataPointRepository? _imageDataPointRepository;
+        private ILabelRepository? _labelRepository;
+        // all repositories here ...
 
         /// <summary>
         /// Constructor of UnitOfWork.
@@ -18,23 +24,6 @@ namespace d_lama_service.Repositories
         public UnitOfWork(DataContext context)
         {
             _context = context; 
-        }
-
-        /// <summary>
-        /// ExampleRepository access with lazy loading.
-        /// </summary>
-        public IExampleRepository ExampleRepository
-        {
-            // lazy loading
-            get
-            {
-
-                if (_exampleRepository == null)
-                {
-                    _exampleRepository = new ExampleRepository(_context);
-                }
-                return _exampleRepository;
-            }
         }
 
         /// <summary>
@@ -51,6 +40,67 @@ namespace d_lama_service.Repositories
                     _userRepository = new UserRepository(_context);
                 }
                 return _userRepository;
+            }
+        }
+
+        /// <summary>
+        /// ProjectRepository access with lazy loading.
+        /// </summary>
+        public IProjectRepository ProjectRepository
+        {
+            get
+            {
+
+                if (_projectRepository == null)
+                {
+                    _projectRepository = new ProjectRepository(_context);
+                }
+                return _projectRepository;
+            }
+        }
+
+        /// <summary>
+        /// TextDataPointRepository access with lazy loading.
+        /// </summary>
+        public ITextDataPointRepository TextDataPointRepository
+        {
+            get
+            {
+                if (_textDataPointRepository == null)
+                {
+                    _textDataPointRepository = new TextDataPointRepository(_context);
+                }
+                return _textDataPointRepository;
+            }
+        }
+
+        /// <summary>
+        /// ImageDataPointRepository access with lazy loading.
+        /// </summary>
+        public IImageDataPointRepository ImageDataPointRepository
+        {
+            get
+            {
+                if (_imageDataPointRepository == null)
+                {
+                    _imageDataPointRepository = new ImageDataPointRepository(_context);
+                }
+                return _imageDataPointRepository;
+            }
+        }
+
+        /// <summary>
+        /// LabelRepository access with lazy loading.
+        /// </summary>
+        public ILabelRepository LabelRepository
+        {
+            get
+            {
+                if (_labelRepository == null)
+                {
+                    _labelRepository = new LabelRepository(_context);
+                }
+                return _labelRepository;
             }
         }
 

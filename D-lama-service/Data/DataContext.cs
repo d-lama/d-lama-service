@@ -1,9 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Data.ProjectEntities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Data
 {
@@ -11,8 +7,26 @@ namespace Data
     {
         public DataContext(DbContextOptions options) : base(options) {}
 
-        public DbSet<Example> Examples { get; set; }
+        public DbSet<Project> Projects { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<TextDataPoint> TextDataPoints { get; set; }
+        public DbSet<ImageDataPoint> ImageDataPoints { get; set; }
+        public DbSet<Label> Labels { get; set; }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+
+            modelBuilder.Entity<Project>()
+                .Property(b => b.CreationDate)
+                .HasDefaultValueSql("getutcdate()");
+
+            modelBuilder.Entity<TextDataPoint>()
+                .Property(b => b.CreationDate)
+                .HasDefaultValueSql("getutcdate()");
+
+            modelBuilder.Entity<ImageDataPoint>()
+                .Property(b => b.CreationDate)
+                .HasDefaultValueSql("getutcdate()");
+        }
     }
 }

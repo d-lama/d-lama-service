@@ -13,7 +13,7 @@ namespace d_lama_service.Repositories.Core
         /// Gets an entity by a provided id.
         /// </summary>
         /// <param name="id"> The id of the entity. </param>
-        /// <returns> The entity. </returns>
+        /// <returns> The entity found or null. </returns>
         Task<TEntity?> GetAsync(int id);
 
         /// <summary>
@@ -30,7 +30,15 @@ namespace d_lama_service.Repositories.Core
         Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
 
         /// <summary>
-        /// Adds or updates and entity.
+        /// Gets the details from an entity (with joining).
+        /// </summary>
+        /// <param name="id"> The id of the entity. </param>
+        /// <param name="includeProperties"> The properties which should be included. </param>
+        /// <returns> The detailed entity if found, else null. </returns>
+        Task<TEntity?> GetDetailsAsync(int id, params Expression<Func<TEntity, object>>[] includeProperties);
+
+        /// <summary>
+        /// Updates and entity.
         /// </summary>
         /// <param name="entity"> The entity to add or update. </param>
         void Update(TEntity entity);

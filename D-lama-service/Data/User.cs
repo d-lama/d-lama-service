@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Data.ProjectEntities;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -33,6 +34,9 @@ namespace Data
 
         [Required]
         public bool IsAdmin { get; set; }
+
+        // Collection navigation containing dependents
+        public ICollection<Project> Projects { get; } = new List<Project>();
 
         public User(string email, string firstName, string lastName, string passwordHash, string passwordSalt, DateTime birthDate, bool isAdmin)
         {
