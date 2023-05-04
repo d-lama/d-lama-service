@@ -30,17 +30,15 @@ The *D-LAMA Service* is an independent API for other apps of the D-LAMA team. It
 
 - Open Package Manager Console in *Data* Project
 - `Add-Migration $MigrationName` to create database changing code (e.g Add-Migration AddUser)
-- `Update-Database` to deploy these changes (run the created db changing code)
+- When starting the application, it will then automatically deploy the migrations to your selected Database.
 
 #### Seed your database with test data
 Currently there is no automatic data creation method available (will come...).
 In order to work with data now, just seed your db with custom data using MSSQL Studio.
 
 ### Branching workflow
-In our project we use the developer branching workflow.
+Newly we directly merge changes from a **feature branch** into the **master** branch in order to be as fast as possible in development and receiving feedback from customers and other teams. 
 
-- Development happens on a second long running branch (dev).
-- Feature branches are created and merged to develop, and only if tested and stable merged to master.
 
 ### Developers
 - [Stefanie Sigrist](https://github.com/sigrist3)

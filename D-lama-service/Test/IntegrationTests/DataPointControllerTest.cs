@@ -847,6 +847,225 @@ namespace Test.IntegrationTests
             Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
         }
 
+        [TestMethod]
+        public async Task LabelDataPoint_InvalidProject() 
+        {
+            // Arrange
+            await AddSomeTextDataPoints(1);
+            var project = await GetFullAdminProjectAsync();
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
+            var validLabelId = project.Labels.FirstOrDefault()!.Id;
+
+            var uri = _apiRoute + "/" + (-1) + "/LabelDataPoint/" + validDataPointIndex;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(validLabelId), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+
+        [TestMethod]
+        public async Task LabelDataPoint_InvalidDataPointIndex()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(1);
+            var project = await GetFullAdminProjectAsync();
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
+            var validLabelId = project.Labels.FirstOrDefault()!.Id;
+
+            var uri = _apiRoute + "/" + project.Id + "/LabelDataPoint/" + -1;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(validLabelId), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+
+        [TestMethod]
+        public async Task LabelDataPoint_InvalidLabelId()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(1);
+            var project = await GetFullAdminProjectAsync();
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
+            var validLabelId = project.Labels.FirstOrDefault()!.Id;
+
+            var uri = _apiRoute + "/" + project.Id + "/LabelDataPoint/" + validDataPointIndex;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(-1), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+
+        [TestMethod]
+        public async Task LabelDataPoint_Valid()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(1);
+            var project = await GetFullAdminProjectAsync();
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
+            var validLabelId = project.Labels.FirstOrDefault()!.Id;
+
+            var uri = _apiRoute + "/" + project.Id + "/LabelDataPoint/" + validDataPointIndex;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(validLabelId), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+
+        [TestMethod]
+        public async Task LabelDataPoint_AlreadyLabeled()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(1);
+            var project = await GetFullAdminProjectAsync();
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
+            var validLabelId = project.Labels.FirstOrDefault()!.Id;
+
+            var uri = _apiRoute + "/" + project.Id + "/LabelDataPoint/" + validDataPointIndex;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(validLabelId), Encoding.UTF8, "application/json");
+            
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            HttpRequestMessage request2 = new HttpRequestMessage(HttpMethod.Post, uri);
+            request2.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request2.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+            var response2 = await Client.SendAsync(request2);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.BadRequest, response2.StatusCode);
+
+        }
+
+        [TestMethod]
+        public async Task RemoveLabelDataPoint_InvalidProject()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(1);
+            var project = await GetFullAdminProjectAsync();
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
+            var validLabelId = project.Labels.FirstOrDefault()!.Id;
+
+            await LabelDataPointAsync(User, validDataPointIndex, validLabelId); // label the datapoint
+
+            var uri = _apiRoute + "/" + -1 + "/LabelDataPoint/" + validDataPointIndex;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task RemoveLabelDataPoint_InvalidDataPointIndex()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(1);
+            var project = await GetFullAdminProjectAsync();
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
+            var validLabelId = project.Labels.FirstOrDefault()!.Id;
+
+            await LabelDataPointAsync(User, validDataPointIndex, validLabelId); // label the datapoint
+
+            var uri = _apiRoute + "/" + project.Id + "/LabelDataPoint/" + -1;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task RemoveLabelDataPoint_WrongUser()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(1);
+            var project = await GetFullAdminProjectAsync();
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
+            var validLabelId = project.Labels.FirstOrDefault()!.Id;
+
+            await LabelDataPointAsync(User, validDataPointIndex, validLabelId); // label the datapoint
+
+            var uri = _apiRoute + "/" + project.Id + "/LabelDataPoint/" + validDataPointIndex;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password }); // wrong user
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task RemoveLabelDataPoint_Valid()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(1);
+            var project = await GetFullAdminProjectAsync();
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
+            var validLabelId = project.Labels.FirstOrDefault()!.Id;
+            
+            await LabelDataPointAsync(User, validDataPointIndex, validLabelId); // label the datapoint
+
+            var uri = _apiRoute + "/" + project.Id + "/LabelDataPoint/" + validDataPointIndex;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
         private async Task SetUpProjects()
         {
             _adminProject = new Project("AdminProject", "My Description");
@@ -875,9 +1094,9 @@ namespace Test.IntegrationTests
             {
                 var dataPoint = new TextDataPoint(content + i, i);
                 await Context.AddAsync(dataPoint);
-                _adminProject.TextDataPoints.Add(dataPoint);
+                _adminProject.DataPoints.Add(dataPoint!);
             }
-            Context.Update(_adminProject);
+            Context.Update(_adminProject!);
             await Context.SaveChangesAsync();
         }
 
@@ -891,9 +1110,23 @@ namespace Test.IntegrationTests
                     Context.Remove(dataPoint);
                 }
 
-                Context.Update(_adminProject);
                 await Context.SaveChangesAsync();
             }
+        }
+
+        private async Task LabelDataPointAsync(TestUser user, int dataPointIdx, int labelId) 
+        {
+            var project = await GetFullAdminProjectAsync();
+            var dataPointId = project.DataPoints.Where(e => e.DataPointIndex == dataPointIdx).First().Id;
+            var labeledDataPoint = new LabeledDataPoint { LabelId = labelId, UserId = user.Id, DataPointId = dataPointId };
+            await Context.LabeledDataPoints.AddAsync(labeledDataPoint);
+            await Context.SaveChangesAsync();
+            ReloadContext();
+        }
+
+        private async Task<Project> GetFullAdminProjectAsync() 
+        {
+            return await Context.Projects.Include(e => e.Labels).Include(e => e.DataPoints).FirstAsync(e => e.Id == _adminProject.Id);
         }
 
         private MultipartFormDataContent GetMultipartFormDataContent(string filePath)

@@ -16,6 +16,8 @@ namespace Data.ProjectEntities
         // Required reference navigation to principal
         public Project Project { get; set; } = null!;
 
+        public ICollection<LabeledDataPoint> LabeledDataPoints { get; } = new List<LabeledDataPoint>();
+
         public Label(string name, string? description)
         {
             Name = name;

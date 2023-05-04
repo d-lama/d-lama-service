@@ -33,6 +33,7 @@ namespace d_lama_service
         {
 
             services.AddControllers();
+            services.AddCors();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             services.AddEndpointsApiExplorer();
@@ -113,6 +114,7 @@ namespace d_lama_service
         /// <param name="app"> The builded application (API). </param>
         public void Configure(WebApplication app)
         {
+            app.Services.CreateScope().ServiceProvider.GetRequiredService<DataContext>().Database.Migrate(); // migration so that Update-Database is not needed anymore
 
             if (_environment.IsDevelopment())
             {
@@ -123,11 +125,11 @@ namespace d_lama_service
             app.UseSwaggerUI(options => {
                 options.OAuthUsePkce();
             });
-            app.UseHttpsRedirection();
 
+            app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
-
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()); // allow any cors connection
             app.MapControllers();
         }
     }

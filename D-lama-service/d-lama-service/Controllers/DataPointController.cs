@@ -129,7 +129,7 @@ namespace d_lama_service.Controllers
 
             var index = await GetNextTextDataPointIndexAsync(project);
             var dataPoint = new TextDataPoint(dataPointForm.Content, index);
-            project.TextDataPoints.Add(dataPoint);
+            project.DataPoints.Add(dataPoint);
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
@@ -169,7 +169,7 @@ namespace d_lama_service.Controllers
             var index = await GetNextTextDataPointIndexAsync(project);
             foreach (var textDataPoint in textDataPoints)
             {
-                project.TextDataPoints.Add(CreateTextDataPoint(textDataPoint, index));
+                project.DataPoints.Add(CreateTextDataPoint(textDataPoint, index));
                 index++;
             }
 
@@ -281,6 +281,84 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
+        /// Labels a datapoint.
+        /// </summary>
+        /// <param name="projectId"> The project id where the datapoint is belonging to. </param>
+        /// <param name="dataPointIndex"> The data point index to be labeled. </param>
+        /// <param name="labelId"> The label id used to label it. </param>
+        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [HttpPost]
+        [Route("{projectId:int}/LabelDataPoint/{dataPointIndex:int}")]
+        public async Task<IActionResult> LabelDataPoint(int projectId, int dataPointIndex, [FromBody] int labelId) 
+        {
+            var labeledDataPoint = await GetLabeledDataPointAsync(projectId, dataPointIndex);
+            if (labeledDataPoint != null) 
+            {
+                return BadRequest("Data point is already labeled by you.");
+            }
+
+            var user = await GetAuthenticatedUserAsync();
+            await GetProjectAsync(projectId); // check for existance
+            var label = await GetLabelAsync(labelId);
+            var dataPoint = await GetDataPointFromProjectAsync(projectId, dataPointIndex);
+            
+            if (label.ProjectId != projectId) 
+            {
+                return BadRequest("The labels provided do not match with the Project!");
+            }
+
+            var labeledData = new LabeledDataPoint { LabelId = labelId, UserId = user.Id, DataPointId = dataPoint.Id };
+            _unitOfWork.LabeledDataPointRepository.Update(labeledData);
+            await _unitOfWork.SaveAsync();
+            return Ok();
+        }
+
+        /// <summary>
+        /// Deletes a labeled datapoint entry. 
+        /// </summary>
+        /// <param name="projectId"> The project id where the datapoint is belonging to. </param>
+        /// <param name="dataPointIndex"> The data point index to be deleted. </param>
+        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [HttpDelete]
+        [Route("{projectId:int}/LabelDataPoint/{dataPointIndex:int}")]
+        public async Task<IActionResult> RemoveLabelDataPoint(int projectId, int dataPointIndex) 
+        {
+            var labeledDataPoint = await GetLabeledDataPointAsync(projectId, dataPointIndex);
+            if (labeledDataPoint == null)
+            {
+                return BadRequest("The labled data point must be first labeled by yourself, before you can delete it.");
+            }
+            _unitOfWork.LabeledDataPointRepository.Delete(labeledDataPoint);
+            await _unitOfWork.SaveAsync();
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Gets a labeled datapoint of a project with checking gor the user.
+        /// </summary>
+        /// <param name="projectId"> The project id where the datapoint is belonging to. </param>
+        /// <param name="dataPointIndex"> The data point index to be deleted. </param>
+        /// <returns> The LabeledDataPoint if found or null if not found. </returns>
+        private async Task<LabeledDataPoint?> GetLabeledDataPointAsync(int projectId, int dataPointIndex) 
+        {
+            var user = await GetAuthenticatedUserAsync();
+            await GetProjectAsync(projectId); // check for existance
+            var dataPointId = (await GetDataPointFromProjectAsync(projectId, dataPointIndex)).Id;
+            try
+            {
+                var labeledDataPoint = (await _unitOfWork.LabeledDataPointRepository.FindAsync(e => e.UserId == user.Id && e.DataPointId == dataPointId))?.First() ?? null;
+                return labeledDataPoint;
+            }
+            catch 
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Returns the next DataPointIndex for a TextDataPoint. 
         /// </summary>
         /// <param name="project"> The project. </param>
@@ -288,7 +366,6 @@ namespace d_lama_service.Controllers
         private async Task<int> GetNextTextDataPointIndexAsync(Project project)
         {
             var presentDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == project.Id);
-            //  ?? 0 -> return 0 if the collection is empty
             int index = presentDataPoints.OrderByDescending(dp => dp.DataPointIndex).FirstOrDefault()?.DataPointIndex + 1 ?? 0;
             return index;
         }
@@ -322,6 +399,28 @@ namespace d_lama_service.Controllers
             return project;
         }
 
+        private async Task<DataPoint> GetDataPointFromProjectAsync(int projectId, int dataPointId) 
+        {
+            DataPoint? dataPoint = (await _unitOfWork.DataPointRespitory.FindAsync(e => e.DataPointIndex == dataPointId && e.ProjectId == projectId)).FirstOrDefault();
+            if (dataPoint == null)
+            {
+                throw new RESTException(HttpStatusCode.NotFound, $"DataPoint with id {dataPointId} does not exist.");
+            }
+            return dataPoint!;
+        }
+
+        private async Task<Label> GetLabelAsync(int labelId)
+        {
+            Label? label = await _unitOfWork.LabelRepository.GetAsync(labelId);
+            if (label == null)
+            {
+                throw new RESTException(HttpStatusCode.NotFound, $"Label with id {labelId} does not exist.");
+            }
+            return label;
+        }
+
+
+        // TODO: refactor, find solution for GetProjectWithOwnerCheckAsync that is a duplicate of the one in ProjectController
         /// <summary>
         /// Gets a project with checking if the user is owner of the project. 
         /// </summary>
