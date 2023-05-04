@@ -1,5 +1,6 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using d_lama_service.Models;
+using System.Net;
+using System.Text;
 
 namespace d_lama_service.DataProcessing
 {
@@ -8,86 +9,47 @@ namespace d_lama_service.DataProcessing
     /// </summary>
     public class DataSetReader
     {
-        private readonly string[] permittedExtensions = { ".csv", ".json", ".txt" };
-        private readonly Encoding encoding = Encoding.UTF8;
-
+        private readonly Encoding _encoding = Encoding.UTF8;
+        private readonly IDictionary<string, DataParser> _parsers = new Dictionary<string, DataParser>
+        {
+            { ".txt", new TextDataParser() },
+            { ".csv", new TextDataParser() },
+            { ".json", new JsonDataParser() }
+        };
 
         public DataSetReader() { }
 
         /// <summary>
-        /// Checks id the given file is supported.
+        /// Reads a supported IFormFile with the correct parser.
         /// </summary>
-        /// <param name="file"> The project ID. </param>
-        /// <returns> True if file extension is supported, else False. </returns>
-        public bool IsValidFormat(IFormFile file)
-        {
-            string fileExt = GetFileExtension(file);
-            if (string.IsNullOrEmpty(fileExt) || !permittedExtensions.Contains(fileExt))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// Checks id the given file is supported.
-        /// </summary>
-        /// <param name="file"> The project ID. </param>
-        /// <returns> A List of data point strings or an empty list. </returns>
+        /// <param name="file"> The file. </param>
+        /// <returns> A List of data points. </returns>
+        /// <exception cref="RESTException"> Throws Rest Excetption if file is not supported. </exception>
         public async Task<ICollection<string>> ReadFileAsync(IFormFile file)
         {
-            ICollection<string> dataPoints = new List<string>();
-
             if (file.Length <= 0 )
-            { 
+            {
+                throw new RESTException(HttpStatusCode.BadRequest, $"The file {file.FileName} is empty.");
+            }
+
+            var reader = new StreamReader(file.OpenReadStream(), _encoding);
+            var fileExt = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            DataParser? parser;
+            if (_parsers.TryGetValue(fileExt, out parser) && parser.IsValidFormat(file))
+            {
+                var dataPoints = await parser.ParseAsync(reader);
+                reader.Close();
+                if (dataPoints == null || dataPoints.Count == 0)
+                {
+                    throw new RESTException(HttpStatusCode.BadRequest, $"The file {file.FileName} could not be read.");
+                }
                 return dataPoints;
             }
-
-            var reader = new StreamReader(file.OpenReadStream(), encoding);
-
-            // read txt; DataPoints separated by new line
-            if (GetFileExtension(file) == ".txt" || GetFileExtension(file) == ".csv")
+            else
             {
-                using (reader)
-                {
-                    while (!reader.EndOfStream)
-                    {
-                        var line = await reader.ReadLineAsync();
-                        if (!string.IsNullOrWhiteSpace(line))
-                        {
-                            line.Trim();
-                            dataPoints.Add(line);
-                        }
-                    }
-                }
+                throw new RESTException(HttpStatusCode.BadRequest, $"The file {file.FileName} is not supported.");
             }
-
-            // read json
-            if (GetFileExtension(file) == ".json")
-            {
-                using (JsonDocument document = await JsonDocument.ParseAsync(reader.BaseStream))
-                {
-                    JsonElement root = document.RootElement;
-                    foreach (JsonElement element in root.EnumerateArray())
-                    {
-                        var line = element.GetString();
-                        if (!string.IsNullOrWhiteSpace(line))
-                        {
-                            line.Trim();
-                            dataPoints.Add(line);
-                        }
-                    }
-                }
-            }
-
-            reader.Close();
-            return dataPoints;
-        }
-
-        private string GetFileExtension(IFormFile file)
-        {
-            string fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            return fileExtension;
         }
     }
 }

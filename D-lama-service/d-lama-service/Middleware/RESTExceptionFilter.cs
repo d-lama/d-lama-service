@@ -27,6 +27,9 @@ namespace d_lama_service.Middleware
                     case HttpStatusCode.NotFound:
                         context.Result = new NotFoundObjectResult(restException.Message);
                         break;
+                    case HttpStatusCode.BadRequest:
+                        context.Result = new BadRequestResult();
+                        break;
                 }
             }
         }

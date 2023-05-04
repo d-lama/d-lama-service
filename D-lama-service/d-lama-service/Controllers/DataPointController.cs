@@ -57,7 +57,7 @@ namespace d_lama_service.Controllers
         /// <returns> The number of text data points. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet]
-        [Route("{projectId:int}/GetNumberOfTextDataPointsAsync")]
+        [Route("{projectId:int}/GetNumberOfTextDataPoints")]
         public async Task<IActionResult> GetNumberOfTextDataPointsAsync(int projectId)
         {
             var project = await GetProjectAsync(projectId);
@@ -121,7 +121,7 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpPost("{projectId:int}/CreateSingleTextDataPointAsync")]
+        [HttpPost("{projectId:int}/CreateSingleTextDataPoint")]
         public async Task<IActionResult> CreateSingleTextDataPointAsync(int projectId, [FromBody] TextDataPointModel dataPointForm)
         {
             // Check if the project exists
@@ -144,7 +144,7 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpPost("{projectId:int}/UploadTextDataPointsAsync")]
+        [HttpPost("{projectId:int}/UploadTextDataPoints")]
         public async Task<IActionResult> UploadTextDataPointsAsync(int projectId, IFormFile uploadedFile)
         {
             // Check if the project exists
@@ -160,22 +160,11 @@ namespace d_lama_service.Controllers
 
             // check if uploadedFile in supported format
             DataSetReader dataSetReader = new DataSetReader();
-            if (!dataSetReader.IsValidFormat(uploadedFile))
-            {
-                // The extension is invalid ... discontinue processing the uploadedFile
-                return BadRequest("The uploaded file is not supported. Supported file extensions are .txt, .csv, .json");
-            }
 
             // TODO: validate data format, header?
 
             // read data into database
             ICollection<string> textDataPoints = await dataSetReader.ReadFileAsync(uploadedFile);
-
-            if (textDataPoints == null || textDataPoints.Count == 0)
-            {
-                // The file could not be loaded to the database.
-                return BadRequest("The file could not be read or is empty.");
-            }
 
             var index = await GetNextTextDataPointIndexAsync(project);
             foreach (var textDataPoint in textDataPoints)
@@ -199,7 +188,7 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400 or 404. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpPatch("{projectId:int}/EditTextDataPointAsync/{dataPointIndex:int}")]
+        [HttpPatch("{projectId:int}/EditTextDataPoint/{dataPointIndex:int}")]
         public async Task<IActionResult> EditTextDataPointAsync(int projectId, int dataPointIndex, [FromBody] EditTextDataPointModel dataPointForm)
         {
             // Check if the project exists and if user is owner
