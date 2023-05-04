@@ -24,3 +24,5 @@ jobs:
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      PP_DLAMA_TOKEN: ${{ secrets.PP_DLAMA_TOKEN }}
+      KUBECONFIG: ${{ secrets.KUBECONFIG }}
