@@ -33,7 +33,7 @@ namespace Data.ProjectEntities
         public User Owner { get; set; } = null!;
 
         // Collections navigation containing dependents
-        public ICollection<TextDataPoint> TextDataPoints { get; } = new List<TextDataPoint>();
+        public ICollection<DataPoint> DataPoints { get; } = new List<DataPoint>();
 
         public ICollection<Label> Labels { get; } = new List<Label>();
 

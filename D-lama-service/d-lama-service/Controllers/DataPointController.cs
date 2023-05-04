@@ -129,7 +129,7 @@ namespace d_lama_service.Controllers
 
             var index = await GetNextTextDataPointIndexAsync(project);
             var dataPoint = new TextDataPoint(dataPointForm.Content, index);
-            project.TextDataPoints.Add(dataPoint);
+            project.DataPoints.Add(dataPoint);
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
@@ -169,7 +169,7 @@ namespace d_lama_service.Controllers
             var index = await GetNextTextDataPointIndexAsync(project);
             foreach (var textDataPoint in textDataPoints)
             {
-                project.TextDataPoints.Add(CreateTextDataPoint(textDataPoint, index));
+                project.DataPoints.Add(CreateTextDataPoint(textDataPoint, index));
                 index++;
             }
 

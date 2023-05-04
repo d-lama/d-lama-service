@@ -853,7 +853,7 @@ namespace Test.IntegrationTests
             // Arrange
             await AddSomeTextDataPoints(1);
             var project = await GetFullAdminProjectAsync();
-            var validDataPointIndex = project.TextDataPoints.FirstOrDefault()!.DataPointIndex;
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
             var validLabelId = project.Labels.FirstOrDefault()!.Id;
 
             var uri = _apiRoute + "/" + (-1) + "/LabelDataPoint/" + validDataPointIndex;
@@ -877,7 +877,7 @@ namespace Test.IntegrationTests
             // Arrange
             await AddSomeTextDataPoints(1);
             var project = await GetFullAdminProjectAsync();
-            var validDataPointIndex = project.TextDataPoints.FirstOrDefault()!.DataPointIndex;
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
             var validLabelId = project.Labels.FirstOrDefault()!.Id;
 
             var uri = _apiRoute + "/" + project.Id + "/LabelDataPoint/" + -1;
@@ -901,7 +901,7 @@ namespace Test.IntegrationTests
             // Arrange
             await AddSomeTextDataPoints(1);
             var project = await GetFullAdminProjectAsync();
-            var validDataPointIndex = project.TextDataPoints.FirstOrDefault()!.DataPointIndex;
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
             var validLabelId = project.Labels.FirstOrDefault()!.Id;
 
             var uri = _apiRoute + "/" + project.Id + "/LabelDataPoint/" + validDataPointIndex;
@@ -925,7 +925,7 @@ namespace Test.IntegrationTests
             // Arrange
             await AddSomeTextDataPoints(1);
             var project = await GetFullAdminProjectAsync();
-            var validDataPointIndex = project.TextDataPoints.FirstOrDefault()!.DataPointIndex;
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
             var validLabelId = project.Labels.FirstOrDefault()!.Id;
 
             var uri = _apiRoute + "/" + project.Id + "/LabelDataPoint/" + validDataPointIndex;
@@ -949,7 +949,7 @@ namespace Test.IntegrationTests
             // Arrange
             await AddSomeTextDataPoints(1);
             var project = await GetFullAdminProjectAsync();
-            var validDataPointIndex = project.TextDataPoints.FirstOrDefault()!.DataPointIndex;
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
             var validLabelId = project.Labels.FirstOrDefault()!.Id;
 
             var uri = _apiRoute + "/" + project.Id + "/LabelDataPoint/" + validDataPointIndex;
@@ -980,7 +980,7 @@ namespace Test.IntegrationTests
             // Arrange
             await AddSomeTextDataPoints(1);
             var project = await GetFullAdminProjectAsync();
-            var validDataPointIndex = project.TextDataPoints.FirstOrDefault()!.DataPointIndex;
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
             var validLabelId = project.Labels.FirstOrDefault()!.Id;
 
             await LabelDataPointAsync(User, validDataPointIndex, validLabelId); // label the datapoint
@@ -1003,7 +1003,7 @@ namespace Test.IntegrationTests
             // Arrange
             await AddSomeTextDataPoints(1);
             var project = await GetFullAdminProjectAsync();
-            var validDataPointIndex = project.TextDataPoints.FirstOrDefault()!.DataPointIndex;
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
             var validLabelId = project.Labels.FirstOrDefault()!.Id;
 
             await LabelDataPointAsync(User, validDataPointIndex, validLabelId); // label the datapoint
@@ -1026,7 +1026,7 @@ namespace Test.IntegrationTests
             // Arrange
             await AddSomeTextDataPoints(1);
             var project = await GetFullAdminProjectAsync();
-            var validDataPointIndex = project.TextDataPoints.FirstOrDefault()!.DataPointIndex;
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
             var validLabelId = project.Labels.FirstOrDefault()!.Id;
 
             await LabelDataPointAsync(User, validDataPointIndex, validLabelId); // label the datapoint
@@ -1049,7 +1049,7 @@ namespace Test.IntegrationTests
             // Arrange
             await AddSomeTextDataPoints(1);
             var project = await GetFullAdminProjectAsync();
-            var validDataPointIndex = project.TextDataPoints.FirstOrDefault()!.DataPointIndex;
+            var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
             var validLabelId = project.Labels.FirstOrDefault()!.Id;
             
             await LabelDataPointAsync(User, validDataPointIndex, validLabelId); // label the datapoint
@@ -1094,7 +1094,7 @@ namespace Test.IntegrationTests
             {
                 var dataPoint = new TextDataPoint(content + i, i);
                 await Context.AddAsync(dataPoint);
-                _adminProject.TextDataPoints.Add(dataPoint!);
+                _adminProject.DataPoints.Add(dataPoint!);
             }
             Context.Update(_adminProject!);
             await Context.SaveChangesAsync();
@@ -1117,7 +1117,7 @@ namespace Test.IntegrationTests
         private async Task LabelDataPointAsync(TestUser user, int dataPointIdx, int labelId) 
         {
             var project = await GetFullAdminProjectAsync();
-            var dataPointId = project.TextDataPoints.Where(e => e.DataPointIndex == dataPointIdx).First().Id;
+            var dataPointId = project.DataPoints.Where(e => e.DataPointIndex == dataPointIdx).First().Id;
             var labeledDataPoint = new LabeledDataPoint { LabelId = labelId, UserId = user.Id, DataPointId = dataPointId };
             await Context.LabeledDataPoints.AddAsync(labeledDataPoint);
             await Context.SaveChangesAsync();
@@ -1126,7 +1126,7 @@ namespace Test.IntegrationTests
 
         private async Task<Project> GetFullAdminProjectAsync() 
         {
-            return await Context.Projects.Include(e => e.Labels).Include(e => e.TextDataPoints).FirstAsync(e => e.Id == _adminProject.Id);
+            return await Context.Projects.Include(e => e.Labels).Include(e => e.DataPoints).FirstAsync(e => e.Id == _adminProject.Id);
         }
 
         private MultipartFormDataContent GetMultipartFormDataContent(string filePath)

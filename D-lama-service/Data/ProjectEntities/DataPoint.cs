@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Data.ProjectEntities
 {
@@ -21,9 +22,9 @@ namespace Data.ProjectEntities
         [Required]
         public int Version { get; set; } // increment per update
 
-        // Required foreign key property
         public int ProjectId { get; set; }
-        // Required reference navigation to principal
+        
+        [JsonIgnore]
         public Project Project { get; set; } = null!;
 
         public ICollection<LabeledDataPoint> LabeledDataPoints { get; } = new List<LabeledDataPoint>();
