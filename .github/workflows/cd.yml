@@ -26,3 +26,4 @@ jobs:
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       PP_DLAMA_TOKEN: ${{ secrets.PP_DLAMA_TOKEN }}
       KUBECONFIG: ${{ secrets.KUBECONFIG }}
+      DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
