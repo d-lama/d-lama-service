@@ -196,11 +196,12 @@ namespace d_lama_service.Controllers
 
             // TODO: check malware with library - not yet - first discuss which tool to use
 
+            string projectPath = ""; // TODO: add property project path to Project and create local path when project is created
             DataSetReader dataSetReader = new DataSetReader();
 
             // read data into database
             int index = await GetNextImageDataPointIndexAsync(project);
-            ICollection<string> imagePaths = await dataSetReader.ReadFileAsync(uploadedFile, index);
+            ICollection<string> imagePaths = await dataSetReader.ReadFileAsync(uploadedFile, index, projectPath);
             foreach (var imagePath in imagePaths)
             {
                 // create the image data point and add it to the project
