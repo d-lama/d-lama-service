@@ -12,8 +12,9 @@ namespace d_lama_service.DataProcessing
             return base.IsValidFormat(file, _permittedExtensions);
         }
 
-        public override async Task<ICollection<string>> ParseAsync(StreamReader reader)
+        public override async Task<ICollection<string>> ParseAsync(IFormFile file, int? index)
         {
+            var reader = new StreamReader(file.OpenReadStream(), _encoding);
             ICollection<string> dataPoints = new List<string>();
 
             using (reader)
@@ -27,7 +28,7 @@ namespace d_lama_service.DataProcessing
                     }
                 }
             }
-
+            reader.Close();
             return dataPoints;
         }
     }

@@ -7,6 +7,7 @@ using Data;
 using Data.ProjectEntities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IO.Compression;
 using System.Linq.Expressions;
 using System.Net;
 
@@ -42,12 +43,12 @@ namespace d_lama_service.Controllers
         {
             var project = await GetProjectAsync(projectId);
 
-            var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
-            if (!textDataPoints.Any())
+            var dataPoints = await _unitOfWork.DataPointRepository.FindAsync(e => e.ProjectId == projectId);
+            if (!dataPoints.Any())
             {
                 return NotFound("No data points found for this project.");
             }
-            return Ok(textDataPoints);
+            return Ok(dataPoints);
         }
 
         /// <summary>
@@ -57,14 +58,14 @@ namespace d_lama_service.Controllers
         /// <returns> The number of text data points. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet]
-        [Route("{projectId:int}/GetNumberOfTextDataPoints")]
-        public async Task<IActionResult> GetNumberOfTextDataPointsAsync(int projectId)
+        [Route("{projectId:int}/GetNumberOfDataPoints")]
+        public async Task<IActionResult> GetNumberOfDataPointsAsync(int projectId)
         {
             var project = await GetProjectAsync(projectId);
 
             // TODO: maybe define count in repository and not get whole list here
-            var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
-            return Ok(textDataPoints.Count());
+            var dataPoints = await _unitOfWork.DataPointRepository.FindAsync(e => e.ProjectId == projectId);
+            return Ok(dataPoints.Count());
         }
 
         /// <summary>
@@ -140,7 +141,7 @@ namespace d_lama_service.Controllers
         /// <summary>
         /// Uploads a textual dataset and assigns the content to a given project.
         /// </summary>
-        /// <param name="id"> The project ID. </param>
+        /// <param name="projectId"> The project ID. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
@@ -161,8 +162,6 @@ namespace d_lama_service.Controllers
             // check if uploadedFile in supported format
             DataSetReader dataSetReader = new DataSetReader();
 
-            // TODO: validate data format, header?
-
             // read data into database
             ICollection<string> textDataPoints = await dataSetReader.ReadFileAsync(uploadedFile);
 
@@ -173,6 +172,47 @@ namespace d_lama_service.Controllers
                 index++;
             }
 
+            _unitOfWork.ProjectRepository.Update(project);
+            await _unitOfWork.SaveAsync();
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Uploads an image dataset and assigns the content to a given project.
+        /// </summary>
+        /// <param name="projectId"> The project ID. </param>
+        /// <param name="uploadedFile"> The compressed file containing the images. </param>
+        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [AdminAuthorize]
+        [HttpPost("{projectId:int}/UploadImageDataPoints")]
+        public async Task<IActionResult> UploadImageDataPointsAsync(int projectId, IFormFile uploadedFile)
+        {
+            // Check if the project exists
+            var project = await GetProjectWithOwnerCheckAsync(projectId);
+
+            // Check if a uploadedFile was uploaded
+            if (uploadedFile == null || uploadedFile.Length == 0)
+            {
+                return BadRequest("No file was uploaded.");
+            }
+
+            // TODO: check malware with library - not yet - first discuss which tool to use
+
+            DataSetReader dataSetReader = new DataSetReader();
+
+            // read data into database
+            int index = await GetNextImageDataPointIndexAsync(project);
+            ICollection<string> imagePaths = await dataSetReader.ReadFileAsync(uploadedFile, index);
+            foreach (var imagePath in imagePaths)
+            {
+                // create the image data point and add it to the project
+                project.DataPoints.Add(CreateImageDataPoint(imagePath, index));
+                index++;
+            }
+
+            // save the changes to the database
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
@@ -273,7 +313,6 @@ namespace d_lama_service.Controllers
                 _unitOfWork.TextDataPointRepository.Delete(textDataPoint);
             }
 
-            // TODO: maybe reindex TextDataPoints
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
@@ -371,6 +410,18 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
+        /// Returns the next DataPointIndex for an ImageDataPoint. 
+        /// </summary>
+        /// <param name="project"> The project. </param>
+        /// <returns> Next index. </returns>
+        private async Task<int> GetNextImageDataPointIndexAsync(Project project)
+        {
+            var presentDataPoints = await _unitOfWork.ImageDataPointRepository.FindAsync(e => e.ProjectId == project.Id);
+            int index = presentDataPoints.OrderByDescending(dp => dp.DataPointIndex).FirstOrDefault()?.DataPointIndex + 1 ?? 0;
+            return index;
+        }
+
+        /// <summary>
         /// Creates a textual data point with given content and index. 
         /// </summary>
         /// <param name="content"> Data point content. </param>
@@ -380,6 +431,19 @@ namespace d_lama_service.Controllers
         {
             var dataPoint = new TextDataPoint(content, index);
             _unitOfWork.TextDataPointRepository.Update(dataPoint);
+            return dataPoint;
+        }
+
+        /// <summary>
+        /// Creates an image data point with given path and index. 
+        /// </summary>
+        /// <param name="path"> Data point content. </param>
+        /// <param name="index"> Data point index. </param>
+        /// <returns> The created text data point. </returns>
+        private ImageDataPoint CreateImageDataPoint(string path, int index)
+        {
+            var dataPoint = new ImageDataPoint(path, index);
+            _unitOfWork.ImageDataPointRepository.Update(dataPoint);
             return dataPoint;
         }
 
@@ -401,7 +465,7 @@ namespace d_lama_service.Controllers
 
         private async Task<DataPoint> GetDataPointFromProjectAsync(int projectId, int dataPointId) 
         {
-            DataPoint? dataPoint = (await _unitOfWork.DataPointRespitory.FindAsync(e => e.DataPointIndex == dataPointId && e.ProjectId == projectId)).FirstOrDefault();
+            DataPoint? dataPoint = (await _unitOfWork.DataPointRepository.FindAsync(e => e.DataPointIndex == dataPointId && e.ProjectId == projectId)).FirstOrDefault();
             if (dataPoint == null)
             {
                 throw new RESTException(HttpStatusCode.NotFound, $"DataPoint with id {dataPointId} does not exist.");

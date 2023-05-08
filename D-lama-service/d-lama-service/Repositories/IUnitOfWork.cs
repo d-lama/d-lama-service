@@ -33,12 +33,12 @@ namespace d_lama_service.Repositories
         ILabelRepository LabelRepository { get; }
 
         /// <summary>
-        /// Gets the DataPointRespitory.
+        /// Gets the DataPointRepository.
         /// </summary>
-        IDataPointRepository DataPointRespitory { get; }
+        IDataPointRepository DataPointRepository { get; }
 
         /// <summary>
-        /// Gets the DataPointRespitory.
+        /// Gets the DataPointRepository.
         /// </summary>
         ILabeledDataPointRepository LabeledDataPointRepository { get; }
 

@@ -1,10 +1,14 @@
-﻿namespace d_lama_service.DataProcessing
+﻿using System.Text;
+
+namespace d_lama_service.DataProcessing
 {
     /// <summary>
     /// Parser for data point files.
     /// </summary>
     public abstract class DataParser
     {
+        protected readonly Encoding _encoding = Encoding.UTF8;
+
         /// <summary>
         /// Checks id the given IFormFile is supported.
         /// </summary>
@@ -21,7 +25,7 @@
             return true;
         }
 
-        public abstract Task<ICollection<string>> ParseAsync(StreamReader reader);
+        public abstract Task<ICollection<string>> ParseAsync(IFormFile file, int? index = 0);
     }
 
 }
