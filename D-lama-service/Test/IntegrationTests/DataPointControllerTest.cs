@@ -109,7 +109,7 @@ namespace Test.IntegrationTests
         public async Task GetNumberOfTextDataPoints_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/GetNumberOfTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/GetNumberOfDataPoints";
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
 
             // Act
@@ -123,7 +123,7 @@ namespace Test.IntegrationTests
         public async Task GetNumberOfTextDataPoints_InvalidId_ReturnsNotFound()
         {
             // Arrange
-            var uri = _apiRoute + "/-1" + "/GetNumberOfTextDataPoints";
+            var uri = _apiRoute + "/-1" + "/GetNumberOfDataPoints";
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -139,7 +139,7 @@ namespace Test.IntegrationTests
         public async Task GetNumberOfTextDataPoints_NoDataPointsPresent_ReturnsOK()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/GetNumberOfTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/GetNumberOfDataPoints";
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -159,7 +159,7 @@ namespace Test.IntegrationTests
         {
             // Arrange
             await AddSomeTextDataPoints(3);
-            var uri = _apiRoute + "/" + _adminProject.Id + "/GetNumberOfTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProject.Id + "/GetNumberOfDataPoints";
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);

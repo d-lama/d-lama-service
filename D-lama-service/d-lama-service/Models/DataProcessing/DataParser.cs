@@ -5,6 +5,8 @@
     /// </summary>
     public abstract class DataParser
     {
+        protected readonly Encoding _encoding = Encoding.UTF8;
+
         /// <summary>
         /// Checks id the given IFormFile is supported.
         /// </summary>
@@ -21,7 +23,7 @@
             return true;
         }
 
-        public abstract Task<ICollection<string>> ParseAsync(StreamReader reader);
+        public abstract Task<ICollection<string>> ParseAsync(IFormFile file, int? index = 0);
     }
 
 }

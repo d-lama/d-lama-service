@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 
 namespace d_lama_service.Models.DataProcessing
 {
@@ -11,8 +12,9 @@ namespace d_lama_service.Models.DataProcessing
             return base.IsValidFormat(file, _permittedExtensions);
         }
 
-        public override async Task<ICollection<string>> ParseAsync(StreamReader reader)
+        public override async Task<ICollection<string>> ParseAsync(IFormFile file, int? index)
         {
+            var reader = new StreamReader(file.OpenReadStream(), _encoding);
             ICollection<string> dataPoints = new List<string>();
 
             using (JsonDocument document = await JsonDocument.ParseAsync(reader.BaseStream))
@@ -27,7 +29,7 @@ namespace d_lama_service.Models.DataProcessing
                     }
                 }
             }
-
+            reader.Close();
             return dataPoints;
         }
     }
