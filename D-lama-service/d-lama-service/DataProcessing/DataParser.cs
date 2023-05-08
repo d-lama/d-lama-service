@@ -25,7 +25,7 @@ namespace d_lama_service.DataProcessing
             return true;
         }
 
-        public abstract Task<ICollection<string>> ParseAsync(IFormFile file, int? index = 0);
+        public abstract Task<ICollection<string>> ParseAsync(IFormFile file, int? index = 0, string? projectPath;
     }
 
 }

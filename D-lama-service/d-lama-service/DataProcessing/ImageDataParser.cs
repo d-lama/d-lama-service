@@ -13,7 +13,7 @@ namespace d_lama_service.DataProcessing
             return base.IsValidFormat(file, _permittedExtensions);
         }
 
-        public override async Task<ICollection<string>> ParseAsync(IFormFile file, int? index)
+        public override async Task<ICollection<string>> ParseAsync(IFormFile file, int? index, string? projectPath)
         {
             ICollection<string> dataPoints = new List<string>();
 
@@ -37,7 +37,7 @@ namespace d_lama_service.DataProcessing
 
                             // move the image file to the images directory and rename it with the index
                             string imageName = $"{index}{Path.GetExtension(imagePath)}";
-                            string imagesDirPath = Path.Combine("ImageDataPointsDirectory", index.ToString());
+                            string imagesDirPath = Path.Combine(projectPath, index.ToString());
                             Directory.CreateDirectory(imagesDirPath);
                             string newPath = Path.Combine(imagesDirPath, imageName);
                             File.Move(imagePath, newPath);
