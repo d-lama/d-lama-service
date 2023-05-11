@@ -60,13 +60,18 @@ namespace d_lama_service.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get(int id)
         {
-            var project = await _unitOfWork.ProjectRepository.GetDetailsAsync(id, e => e.Labels);
-
-            if (project == null) 
+            var user = await GetAuthenticatedUserAsync();
+            var project = await _unitOfWork.ProjectRepository.GetDetailsAsync(id, e => e.Labels, e => e.DataPoints);
+            
+            if (project == null)
             {
                 return NotFound();
             }
-            return Ok(new DetailedProjectModel(project));
+
+            var dataPointsIds = project.DataPoints.Select(e => e.Id).ToList();
+            var labeledFromUser = await _unitOfWork.LabeledDataPointRepository.FindAsync(e => e.UserId == user.Id && dataPointsIds.Contains(e.DataPointId));
+
+            return Ok(new DetailedProjectModel(project, dataPointsIds.Count, labeledFromUser.Count()));
         }
 
         /// <summary>
