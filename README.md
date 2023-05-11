@@ -7,7 +7,7 @@ The *D-LAMA Service* is an independent API for other apps of the D-LAMA team. It
 ### Project setup
 - **d-lama-service**: Domain logic
 - **Data**: Database entity & Migrations
-- **Test (to come)**: Unit test of domain logic
+- **Test**: Unit test of domain logic
 
 ### Coding guidelines
 - Use existing C# naming conventions
