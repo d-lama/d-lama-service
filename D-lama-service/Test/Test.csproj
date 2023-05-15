@@ -67,4 +67,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="test_project_files\" />
+  </ItemGroup>
+
 </Project>

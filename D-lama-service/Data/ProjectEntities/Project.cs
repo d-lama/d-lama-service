@@ -23,7 +23,10 @@ namespace Data.ProjectEntities
         public DateTime UpdateDate { get; set; }
 
         [Required]
-        public bool IsReady { get; set; }
+        public string DataType { get; set; }
+
+        [Required]
+        public string StoragePath { get; set; }
 
         // Required foreign key property
         public int OwnerId { get; set; }
@@ -42,7 +45,17 @@ namespace Data.ProjectEntities
             Name = name;
             Description = description;
             UpdateDate = DateTime.UtcNow;
-            IsReady = false;
+            DataType = "text";
+            StoragePath = "no path available";
+        }
+
+        public Project(string name, string description, string storagePath)
+        {
+            Name = name;
+            Description = description;
+            UpdateDate = DateTime.UtcNow;
+            DataType = "image";
+            StoragePath = storagePath;
         }
     }
 }
