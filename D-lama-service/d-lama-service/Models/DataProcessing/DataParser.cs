@@ -23,7 +23,7 @@
             return true;
         }
 
-        public abstract Task<ICollection<string>> ParseAsync(IFormFile file, int? index = 0, string? projectPath;
+        public abstract Task<ICollection<string>> ParseAsync(IFormFile file, int index, string projectPath);
     }
 
 }

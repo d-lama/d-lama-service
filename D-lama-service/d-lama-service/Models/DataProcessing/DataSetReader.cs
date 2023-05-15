@@ -26,7 +26,7 @@ namespace d_lama_service.Models.DataProcessing
         /// <param name="file"> The file. </param>
         /// <returns> A List of data points. </returns>
         /// <exception cref="RESTException"> Throws Rest Excetption if file is not supported. </exception>
-        public async Task<ICollection<string>> ReadFileAsync(IFormFile file, int? index = 0, string? projectPath = "")
+        public async Task<ICollection<string>> ReadFileAsync(IFormFile file, int index = 0, string projectPath = "")
         {
             if (file.Length <= 0)
             {

@@ -61,7 +61,6 @@ namespace d_lama_service.Controllers
         {
             var project = await GetProjectAsync(projectId);
 
-            // TODO: maybe define count in repository and not get whole list here
             var dataPoints = await _unitOfWork.DataPointRepository.FindAsync(e => e.ProjectId == projectId);
             return Ok(dataPoints.Count());
         }
@@ -78,13 +77,28 @@ namespace d_lama_service.Controllers
         {
             var project = await GetProjectAsync(projectId);
 
-            var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
-            if (!textDataPoints.Any())
+            if (project.DataType == "text")
+            {
+                var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
+                if (!textDataPoints.Any())
+                {
+                    return NotFound("No data point found for this project and index.");
+                }
+                var textDataPoint = textDataPoints.First();
+                return Ok(new ReadTextDataPointModel(textDataPoint));
+            } else if (project.DataType == "image")
+            {
+                var imageDataPoints = await _unitOfWork.ImageDataPointRepository.FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
+                if (!imageDataPoints.Any())
+                {
+                    return NotFound("No data point found for this project and index.");
+                }
+                var imageDataPoint = imageDataPoints.First();
+                return Ok(new ReadImageDataPointModel(imageDataPoint));
+            } else
             {
                 return NotFound("No data point found for this project and index.");
-            }
-            var textDataPoint = textDataPoints.First();
-            return Ok(new ReadTextDataPointModel(textDataPoint));
+            }            
         }
 
         /// <summary>
@@ -147,6 +161,11 @@ namespace d_lama_service.Controllers
             // Check if the project exists
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
+            if (project.DataType != "text")
+            {
+                return BadRequest("The projet data type must be set to text in order to upload text content.");
+            }
+
             // Check if a uploadedFile was uploaded
             if (uploadedFile == null || uploadedFile.Length == 0)
             {
@@ -155,10 +174,8 @@ namespace d_lama_service.Controllers
 
             // TODO: check malware with library - not yet - first discuss which tool to use
 
-            // check if uploadedFile in supported format
-            DataSetReader dataSetReader = new DataSetReader();
-
             // read data into database
+            DataSetReader dataSetReader = new DataSetReader();
             ICollection<string> textDataPoints = await dataSetReader.ReadFileAsync(uploadedFile);
 
             var index = await GetNextTextDataPointIndexAsync(project);
@@ -188,6 +205,11 @@ namespace d_lama_service.Controllers
             // Check if the project exists
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
+            if (project.DataType != "image")
+            {
+                return BadRequest("The projet data type must be set to image in order to upload image files.");
+            }
+
             // Check if a uploadedFile was uploaded
             if (uploadedFile == null || uploadedFile.Length == 0)
             {
@@ -196,12 +218,10 @@ namespace d_lama_service.Controllers
 
             // TODO: check malware with library - not yet - first discuss which tool to use
 
-            string projectPath = ""; // TODO: add property project path to Project and create local path when project is created
-            DataSetReader dataSetReader = new DataSetReader();
-
             // read data into database
+            DataSetReader dataSetReader = new DataSetReader();
             int index = await GetNextImageDataPointIndexAsync(project);
-            ICollection<string> imagePaths = await dataSetReader.ReadFileAsync(uploadedFile, index, projectPath);
+            ICollection<string> imagePaths = await dataSetReader.ReadFileAsync(uploadedFile, index, project.StoragePath);
             foreach (var imagePath in imagePaths)
             {
                 // create the image data point and add it to the project

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230501172119_AddDataLabelling2")]
-    partial class AddDataLabelling2
+    [Migration("20230515185858_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -54,6 +54,8 @@ namespace Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("DataPoints");
 
@@ -126,12 +128,13 @@ namespace Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("getutcdate()");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("DataType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsReady")
-                        .HasColumnType("bit");
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -139,6 +142,10 @@ namespace Data.Migrations
 
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
+
+                    b.Property<string>("StoragePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("datetime2");
@@ -197,8 +204,6 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("ProjectId");
-
                     b.HasDiscriminator().HasValue("ImageDataPoint");
                 });
 
@@ -210,9 +215,18 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("ProjectId");
-
                     b.HasDiscriminator().HasValue("TextDataPoint");
+                });
+
+            modelBuilder.Entity("Data.ProjectEntities.DataPoint", b =>
+                {
+                    b.HasOne("Data.ProjectEntities.Project", "Project")
+                        .WithMany("DataPoints")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Data.ProjectEntities.Label", b =>
@@ -264,28 +278,6 @@ namespace Data.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("Data.ProjectEntities.ImageDataPoint", b =>
-                {
-                    b.HasOne("Data.ProjectEntities.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("Data.ProjectEntities.TextDataPoint", b =>
-                {
-                    b.HasOne("Data.ProjectEntities.Project", "Project")
-                        .WithMany("TextDataPoints")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-                });
-
             modelBuilder.Entity("Data.ProjectEntities.DataPoint", b =>
                 {
                     b.Navigation("LabeledDataPoints");
@@ -298,9 +290,9 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.ProjectEntities.Project", b =>
                 {
-                    b.Navigation("Labels");
+                    b.Navigation("DataPoints");
 
-                    b.Navigation("TextDataPoints");
+                    b.Navigation("Labels");
                 });
 
             modelBuilder.Entity("Data.User", b =>

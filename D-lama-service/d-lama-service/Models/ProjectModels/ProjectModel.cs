@@ -10,7 +10,10 @@ namespace d_lama_service.Models.ProjectModels
         
         [Required]
         public string Description { get; set; }
-        
+
+        [Required]
+        public string DataType { get; set; }
+
         [Required]
         public List<LabelChangeModel> Labels { get; set; }
 

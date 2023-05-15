@@ -21,13 +21,17 @@ namespace d_lama_service.Controllers
     public class ProjectController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IWebHostEnvironment _environment;
 
         /// <summary>
         /// Constructor of the ProjectController.
         /// </summary>
-        public ProjectController(IUnitOfWork unitOfWork) 
+        /// <param name="unitOfWork"> The unitOfWork for handling db access. </param>
+        /// <param name="environment"> The web hosting environment. </param>
+        public ProjectController(IUnitOfWork unitOfWork, IWebHostEnvironment environment) 
         {
             _unitOfWork = unitOfWork;
+            _environment = environment;
         }
 
         /// <summary>
@@ -102,15 +106,35 @@ namespace d_lama_service.Controllers
                 return BadRequest("A project with this name has already been created.");
             }
 
-            var project = new Project(projectForm.ProjectName, projectForm.Description);
+            Project? project;
+            string? projectDirectoryPath;
+
+            if (projectForm.DataType == "image")
+            {
+                var webRootPath = _environment.WebRootPath.ToString();
+                projectDirectoryPath = Path.Combine(webRootPath, "project_files");
+                project = new Project(projectForm.ProjectName, projectForm.Description, projectDirectoryPath);
+            } else if (projectForm.DataType == "text") {
+                project = new Project(projectForm.ProjectName, projectForm.Description);
+            } else
+            {
+                return BadRequest("Unsupported data type. The following data types are supported: text, image.");
+            }
+
             user.Projects.Add(project);
             foreach (var label in projectForm.Labels) 
             {
                 project.Labels.Add(new Label(label.Name, label.Description));
             }
 
+            // save changes needed in order to get Id
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
+
+            if (project.DataType == "image")
+            {
+                await CreateFileDirectory(project);
+            }
 
             var createdResource = new { id = project.Id };
             return CreatedAtAction(nameof(Get), createdResource, createdResource);
@@ -165,6 +189,11 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var project = await GetProjectWithOwnerCheckAsync(id);
+
+            if (project.DataType == "image")
+            {
+                Directory.Delete(project.StoragePath, true);
+            }
 
             // cascade deletes children
             _unitOfWork.ProjectRepository.Delete(project);
@@ -293,6 +322,20 @@ namespace d_lama_service.Controllers
             }
 
             return project;
+        }
+
+        /// <summary>
+        /// Creates a project directory in the file storage path. 
+        /// </summary>
+        /// <param name="project"> The project. </param>
+        private async Task CreateFileDirectory(Project project)
+        {
+            var projectDirectoryPath = Path.Combine(project.StoragePath, $"project_{project.Id}");
+            Directory.CreateDirectory(projectDirectoryPath);
+            project.StoragePath = projectDirectoryPath;
+
+            _unitOfWork.ProjectRepository.Update(project);
+            await _unitOfWork.SaveAsync();
         }
 
         private async Task<User> GetAuthenticatedUserAsync()
