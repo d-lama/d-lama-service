@@ -173,10 +173,15 @@ namespace d_lama_service.Controllers
         [Route("{id:int}/Labels/")]
         public async Task<IActionResult> AddLabels(int id, [FromBody] LabelSetModel[] newLabels) 
         {
-            var project = await GetProjectWithOwnerCheckAsync(id);
+            var project = await GetProjectWithOwnerCheckAsync(id, e => e.Labels);
 
             foreach (var label in newLabels) 
             {
+                if (project.Labels.Select(e => e.Name).Contains(label.Name)) 
+                {
+                    await _unitOfWork.DisposeAsync();
+                    return BadRequest($"A label with the name '{label.Name}' does already exists. Please use another name.");
+                }
                 project.Labels.Add(new Label(label.Name, label.Description));
             }
 
@@ -206,7 +211,12 @@ namespace d_lama_service.Controllers
                 return NotFound();
             }
 
-            // TODO: check if label already used and if so prohibit deletion
+            var labeledData = await _unitOfWork.LabeledDataPointRepository.FindAsync(e => e.LabelId == labelId);
+            if (labeledData.Any()) 
+            {
+                return BadRequest("Label was already used and cannot be deleted therefore.");
+            }
+
             _unitOfWork.LabelRepository.Delete(label);
             await _unitOfWork.SaveAsync();
 

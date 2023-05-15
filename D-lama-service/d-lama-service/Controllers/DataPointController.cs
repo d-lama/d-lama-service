@@ -1,6 +1,6 @@
-﻿using d_lama_service.DataProcessing;
-using d_lama_service.Middleware;
+﻿using d_lama_service.Middleware;
 using d_lama_service.Models;
+using d_lama_service.Models.DataProcessing;
 using d_lama_service.Models.ProjectModels;
 using d_lama_service.Repositories;
 using Data;
@@ -325,7 +325,7 @@ namespace d_lama_service.Controllers
         [Route("{projectId:int}/LabelDataPoint/{dataPointIndex:int}")]
         public async Task<IActionResult> RemoveLabelDataPoint(int projectId, int dataPointIndex) 
         {
-            var labeledDataPoint = await GetLabeledDataPointAsync(projectId, dataPointIndex);
+            var labeledDataPoint = await GetLabeledDataPointOfUserAsync(projectId, dataPointIndex);
             if (labeledDataPoint == null)
             {
                 return BadRequest("The labled data point must be first labeled by yourself, before you can delete it.");
@@ -336,13 +336,40 @@ namespace d_lama_service.Controllers
             return Ok();
         }
 
+        [AdminAuthorize]
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [HttpGet]
+        [Route("{projectId:int}/GetLabaledData")]
+        public async Task<IActionResult> GetLabeledDataForProject(int projectId) 
+        {
+            var project = await GetProjectWithOwnerCheckAsync(projectId, e => e.DataPoints);
+            var dataPointIds = project.DataPoints.Select(e => e.Id) ?? new List<int>();
+            var labeledData = await _unitOfWork.LabeledDataPointRepository.FindAsync(e => dataPointIds.Contains(e.DataPointId));
+            return Ok(new LabeledDataModel(project, labeledData));
+        }
+
+        [AdminAuthorize]
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [HttpGet]
+        [Route("{projectId:int}/GetLabaledData/{dataPointIndex:int}")]
+        public async Task<IActionResult> GetLabeledDataPointForProject(int projectId, int dataPointIndex) 
+        {
+            var project = await GetProjectWithOwnerCheckAsync(projectId);
+            var dataPointId = (await GetDataPointFromProjectAsync(projectId, dataPointIndex)).Id;
+
+            var labeledDataPoint = await _unitOfWork.LabeledDataPointRepository.FindAsync(e => e.DataPointId == dataPointId);
+            return null;
+            
+        }
+
+
         /// <summary>
         /// Gets a labeled datapoint of a project with checking gor the user.
         /// </summary>
         /// <param name="projectId"> The project id where the datapoint is belonging to. </param>
         /// <param name="dataPointIndex"> The data point index to be deleted. </param>
         /// <returns> The LabeledDataPoint if found or null if not found. </returns>
-        private async Task<LabeledDataPoint?> GetLabeledDataPointAsync(int projectId, int dataPointIndex) 
+        private async Task<LabeledDataPoint?> GetLabeledDataPointOfUserAsync(int projectId, int dataPointIndex) 
         {
             var user = await GetAuthenticatedUserAsync();
             await GetProjectAsync(projectId); // check for existance
@@ -389,9 +416,9 @@ namespace d_lama_service.Controllers
         /// <param name="projectId"> The id of the project. </param>
         /// <returns> The found project. </returns>
         /// <exception cref="RESTException"> Throws Rest Excetption if project is not found. </exception>
-        private async Task<Project> GetProjectAsync(int projectId)
+        private async Task<Project> GetProjectAsync(int projectId, params Expression<Func<Project, object>>[] includes)
         {
-            Project? project = await _unitOfWork.ProjectRepository.GetAsync(projectId);
+            Project? project = await _unitOfWork.ProjectRepository.GetDetailsAsync(projectId,includes);
             if (project == null)
             {
                 throw new RESTException(HttpStatusCode.NotFound, $"Project with id {projectId} does not exist.");
@@ -427,9 +454,11 @@ namespace d_lama_service.Controllers
         /// <param name="projectId"> The id of the project. </param>
         /// <returns> The found project. </returns>
         /// <exception cref="RESTException"> Throws Rest Excetption if project is not found or the current user is not the owner. </exception>
+        
+        // TODO: Method comments
         private async Task<Project> GetProjectWithOwnerCheckAsync(int projectId, params Expression<Func<Project, object>>[] includes)
         {
-            Project project = await GetProjectAsync(projectId);
+            Project project = await GetProjectAsync(projectId, includes);
 
             var user = await GetAuthenticatedUserAsync();
             if (project.Owner != user)

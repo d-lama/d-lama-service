@@ -1,8 +1,9 @@
-﻿using d_lama_service.Models;
+﻿using d_lama_service.Models.DataProcessing;
+using d_lama_service.Models;
 using System.Net;
 using System.Text;
 
-namespace d_lama_service.DataProcessing
+namespace d_lama_service.Models.DataProcessing
 {
     /// <summary>
     /// Reads textual files and returns data points in a list.
@@ -27,7 +28,7 @@ namespace d_lama_service.DataProcessing
         /// <exception cref="RESTException"> Throws Rest Excetption if file is not supported. </exception>
         public async Task<ICollection<string>> ReadFileAsync(IFormFile file)
         {
-            if (file.Length <= 0 )
+            if (file.Length <= 0)
             {
                 throw new RESTException(HttpStatusCode.BadRequest, $"The file {file.FileName} is empty.");
             }

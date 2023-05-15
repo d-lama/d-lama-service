@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace d_lama_service.DataProcessing
+namespace d_lama_service.Models.DataProcessing
 {
     public class JsonDataParser : DataParser
     {
