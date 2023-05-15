@@ -36,7 +36,17 @@ namespace d_lama_service.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            return Ok(await _unitOfWork.ProjectRepository.GetAllAsync());
+            var projectList = new List<DetailedProjectModel>();
+            var user = await GetAuthenticatedUserAsync();
+            var projects = await _unitOfWork.ProjectRepository.GetAllAsync();
+            foreach (var project in projects) 
+            {
+                var detailedProject = await _unitOfWork.ProjectRepository.GetDetailsAsync(project.Id, e => e.DataPoints);
+                var dataPointsIds = project.DataPoints.Select(e => e.Id).ToList();
+                var labeledFromUser = await _unitOfWork.LabeledDataPointRepository.FindAsync(e => e.UserId == user.Id && dataPointsIds.Contains(e.DataPointId));
+                projectList.Add(new DetailedProjectModel(project, dataPointsIds.Count, labeledFromUser.Count()));
+            }
+            return Ok(projectList);
         }
 
         /// <summary>
