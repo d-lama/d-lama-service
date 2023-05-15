@@ -111,7 +111,8 @@ namespace d_lama_service.Controllers
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
-            return Created(nameof(Get),project.Id);
+            var createdResource = new { id = project.Id };
+            return CreatedAtAction(nameof(Get), createdResource, createdResource);
         }
 
         /// <summary>

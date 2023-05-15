@@ -89,7 +89,8 @@ namespace d_lama_service.Controllers
             _unitOfWork.UserRepository.Update(user);
             await _unitOfWork.SaveAsync();
 
-            return Created(nameof(Get),null);
+            var createdResource = new { id = user.Id };
+            return CreatedAtAction(nameof(Get), createdResource, createdResource);
         }
 
         /// <summary>
