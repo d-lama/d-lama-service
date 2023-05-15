@@ -1,19 +1,20 @@
 ﻿using Data.ProjectEntities;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 
 namespace d_lama_service.Models.ProjectModels
 {
     public class LabeledDataPointModel
     {
-        public int Counters { get; set; }
-        public Dictionary<int,int> LabelsToCount { get; set; } = new Dictionary<int,int>();
+        public Dictionary<int, int> LabelIdToCountMap { get; set; }
+        public int LabellersCount { get; set; } = 0;
 
-        public LabeledDataPointModel(IEnumerable<LabeledDataPoint> labeledDataPoints) 
+        public LabeledDataPointModel(Dictionary<int,int> labelIdToCountMap) 
         {
-            foreach (var datapoints in labeledDataPoints) 
+            LabelIdToCountMap = labelIdToCountMap;
+            foreach (var counts in labelIdToCountMap.Values) 
             {
-                if()
+                LabellersCount += counts;
             }
         }
-
     }
 }

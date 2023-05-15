@@ -292,7 +292,7 @@ namespace d_lama_service.Controllers
         [Route("{projectId:int}/LabelDataPoint/{dataPointIndex:int}")]
         public async Task<IActionResult> LabelDataPoint(int projectId, int dataPointIndex, [FromBody] int labelId) 
         {
-            var labeledDataPoint = await GetLabeledDataPointAsync(projectId, dataPointIndex);
+            var labeledDataPoint = await GetLabeledDataPointOfUserAsync(projectId, dataPointIndex);
             if (labeledDataPoint != null) 
             {
                 return BadRequest("Data point is already labeled by you.");
@@ -336,6 +336,11 @@ namespace d_lama_service.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Gets all information of the labeled datapoints of a project.
+        /// </summary>
+        /// <param name="projectId"> The id of the project. </param>
+        /// <returns> Statuscode 200 with the list of information about the datapoints, if the project is found and the owner made the request, else statuscode 400. </returns>
         [AdminAuthorize]
         [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet]
@@ -343,25 +348,32 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> GetLabeledDataForProject(int projectId) 
         {
             var project = await GetProjectWithOwnerCheckAsync(projectId, e => e.DataPoints);
-            var dataPointIds = project.DataPoints.Select(e => e.Id) ?? new List<int>();
-            var labeledData = await _unitOfWork.LabeledDataPointRepository.FindAsync(e => dataPointIds.Contains(e.DataPointId));
-            return Ok(new LabeledDataModel(project, labeledData));
+            var labeledDataModelList = new Dictionary<int,LabeledDataPointModel>();  
+            foreach (var dataPoint in project.DataPoints) 
+            {
+                var dataPointStats = await _unitOfWork.LabeledDataPointRepository.GetLabeledDataPointStatistic(dataPoint.Id);
+                labeledDataModelList.Add(dataPoint.Id, new LabeledDataPointModel(dataPointStats));
+            }
+            return Ok(labeledDataModelList);
         }
 
+        /// <summary>
+        /// Gets information about a specific datapoint of a project.
+        /// </summary>
+        /// <param name="projectId"> The id of the project. </param>
+        /// <param name="dataPointIndex"> The index of the datapoint. </param>
+        /// <returns> Statuscode 200 with the label details, if the request was made from the project owner and the project is found, else statuscode 400. </returns>
         [AdminAuthorize]
         [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet]
         [Route("{projectId:int}/GetLabaledData/{dataPointIndex:int}")]
         public async Task<IActionResult> GetLabeledDataPointForProject(int projectId, int dataPointIndex) 
         {
-            var project = await GetProjectWithOwnerCheckAsync(projectId);
+            await GetProjectWithOwnerCheckAsync(projectId); // for owner check
             var dataPointId = (await GetDataPointFromProjectAsync(projectId, dataPointIndex)).Id;
-
-            var labeledDataPoint = await _unitOfWork.LabeledDataPointRepository.FindAsync(e => e.DataPointId == dataPointId);
-            return null;
-            
+            var dataPointStats = await _unitOfWork.LabeledDataPointRepository.GetLabeledDataPointStatistic(dataPointId);
+            return Ok(new LabeledDataPointModel(dataPointStats));
         }
-
 
         /// <summary>
         /// Gets a labeled datapoint of a project with checking gor the user.
