@@ -39,16 +39,46 @@ namespace d_lama_service.Controllers
         [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet]
         [Route("{projectId:int}")]
-        public async Task<IActionResult> GetAllTextDataPointsAsync(int projectId)
+        public async Task<IActionResult> GetAllDataPointsAsync(int projectId)
         {
             var project = await GetProjectAsync(projectId);
 
-            var dataPoints = await _unitOfWork.DataPointRepository.FindAsync(e => e.ProjectId == projectId);
-            if (!dataPoints.Any())
+            if (project.DataType == "text")
             {
-                return NotFound("No data points found for this project.");
+                var responseList = new List<ReadTextDataPointModel>();
+                var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
+                if (!textDataPoints.Any())
+                {
+                    return NotFound("No data point found for this project.");
+                }
+
+                foreach (var textDataPoint in textDataPoints)
+                {
+                    responseList.Add(new ReadTextDataPointModel(textDataPoint));
+                }
+
+                return Ok(responseList);
             }
-            return Ok(dataPoints);
+            else if (project.DataType == "image")
+            {
+                var responseList = new List<ReadImageDataPointModel>();
+                var imageDataPoints = await _unitOfWork.ImageDataPointRepository.FindAsync(e => e.ProjectId == projectId);
+                if (!imageDataPoints.Any())
+                {
+                    return NotFound("No data point found for this project.");
+                }
+                
+                foreach (var imageDataPoint in imageDataPoints)
+                {
+                    responseList.Add(new ReadImageDataPointModel(imageDataPoint));
+                }
+
+                return Ok(responseList);
+            }
+            else
+            {
+                return NotFound("No data point found for this project.");
+            }
         }
 
         /// <summary>
@@ -72,7 +102,7 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <param name="projectId"> The ID of the project. </param>
         /// <param name="dataPointIndex"> The index of the data point. </param>
-        /// <returns> 200 with a list of data points or 404 if there are no data points at all. </returns>
+        /// <returns> 200 with the data point or 404 if not match found. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet]
         [Route("{projectId:int}/{dataPointIndex:int}")]
@@ -89,16 +119,22 @@ namespace d_lama_service.Controllers
                 }
                 var textDataPoint = textDataPoints.First();
                 return Ok(new ReadTextDataPointModel(textDataPoint));
-            } else if (project.DataType == "image")
+            }
+            else if (project.DataType == "image")
             {
                 var imageDataPoints = await _unitOfWork.ImageDataPointRepository.FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
                 if (!imageDataPoints.Any())
                 {
                     return NotFound("No data point found for this project and index.");
                 }
-                var imageDataPoint = imageDataPoints.First();
-                return Ok(new ReadImageDataPointModel(imageDataPoint));
-            } else
+                var imagePath = imageDataPoints.First().Path;
+
+                byte[] imageBytes = await System.IO.File.ReadAllBytesAsync(imagePath);
+                string contentType = GetContentType(imagePath);
+
+                return File(imageBytes, contentType);
+            }
+            else
             {
                 return NotFound("No data point found for this project and index.");
             }            
@@ -108,8 +144,8 @@ namespace d_lama_service.Controllers
         /// Retrieves a range of data point related to a project.
         /// </summary>
         /// <param name="projectId"> The ID of the project. </param>
-        /// <param name="startIndex"> The start of index range (inclusive). </param>
-        /// <param name="endIndex"> The end of index range (inclusive). </param>
+        /// <param name="startIndex"> The start index of DataPoint range (inclusive). </param>
+        /// <param name="endIndex"> The end index of DataPoint range (inclusive). </param>
         /// <returns> A da</returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet]
@@ -167,7 +203,7 @@ namespace d_lama_service.Controllers
 
             if (project.DataType != "text")
             {
-                return BadRequest("The projet data type must be set to text in order to upload text content.");
+                return BadRequest("The project data type must be set to text in order to upload text content.");
             }
 
             // Check if a uploadedFile was uploaded
@@ -196,6 +232,44 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
+        /// Uploads a single image file and assigns it to a given project.
+        /// </summary>
+        /// <param name="projectId"> The project ID. </param>
+        /// <param name="uploadedFile"> The image file. </param>
+        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [AdminAuthorize]
+        [HttpPost("{projectId:int}/UploadSingleImageDataPoint")]
+        public async Task<IActionResult> UploadSingleImageDataPointAsync(int projectId, IFormFile uploadedFile)
+        {
+            // Check if the project exists
+            var project = await GetProjectWithOwnerCheckAsync(projectId);
+
+            if (project.DataType != "image")
+            {
+                return BadRequest("The project data type must be set to image in order to upload image files.");
+            }
+
+            // Check if a uploadedFile was uploaded
+            if (uploadedFile == null || uploadedFile.Length == 0)
+            {
+                return BadRequest("No file was uploaded.");
+            }
+
+            // read data into database
+            DataSetReader dataSetReader = new DataSetReader();
+            int index = await GetNextImageDataPointIndexAsync(project);
+            ICollection<string> imagePaths = await dataSetReader.ReadFileAsync(uploadedFile, index, project.StoragePath);
+            project.DataPoints.Add(CreateImageDataPoint(imagePaths.First(), index));
+
+            // save the changes to the database
+            _unitOfWork.ProjectRepository.Update(project);
+            await _unitOfWork.SaveAsync();
+
+            return Ok();
+        }
+
+        /// <summary>
         /// Uploads an image dataset and assigns the content to a given project.
         /// </summary>
         /// <param name="projectId"> The project ID. </param>
@@ -211,7 +285,7 @@ namespace d_lama_service.Controllers
 
             if (project.DataType != "image")
             {
-                return BadRequest("The projet data type must be set to image in order to upload image files.");
+                return BadRequest("The project data type must be set to image in order to upload image files.");
             }
 
             // Check if a uploadedFile was uploaded
@@ -219,8 +293,6 @@ namespace d_lama_service.Controllers
             {
                 return BadRequest("No file was uploaded.");
             }
-
-            // TODO: check malware with library - not yet - first discuss which tool to use
 
             // read data into database
             DataSetReader dataSetReader = new DataSetReader();
@@ -458,14 +530,34 @@ namespace d_lama_service.Controllers
         /// <summary>
         /// Creates an image data point with given path and index. 
         /// </summary>
-        /// <param name="path"> Data point content. </param>
+        /// <param name="path"> Data point path. </param>
         /// <param name="index"> Data point index. </param>
-        /// <returns> The created text data point. </returns>
+        /// <returns> The created image data point. </returns>
         private ImageDataPoint CreateImageDataPoint(string path, int index)
         {
             var dataPoint = new ImageDataPoint(path, index);
             _unitOfWork.ImageDataPointRepository.Update(dataPoint);
             return dataPoint;
+        }
+
+        /// <summary>
+        /// Gets the content type of an image file at the given path.
+        /// </summary>
+        /// <param name="imagePath"> Data point path. </param>
+        /// <returns> The content type. </returns>
+        private string GetContentType(string imagePath)
+        {
+            string extension = Path.GetExtension(imagePath);
+            switch (extension.ToLowerInvariant())
+            {
+                case ".jpg":
+                case ".jpeg":
+                    return "image/jpeg";
+                case ".png":
+                    return "image/png";
+                default:
+                    return "application/octet-stream";
+            }
         }
 
         /// <summary>

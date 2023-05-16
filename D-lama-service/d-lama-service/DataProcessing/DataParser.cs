@@ -14,18 +14,18 @@ namespace d_lama_service.DataProcessing
         /// </summary>
         /// <param name="file"> The file. </param>
         /// <returns> True if supported, else False. </returns>
-        public virtual bool IsValidFormat(IFormFile file, string[]? permittedExtensions = null)
+        public virtual bool IsValidFormat(IFormFile file, string[]? supportedExtensions = null)
         {
-            if (permittedExtensions == null) { return false; }
+            if (supportedExtensions == null) { return false; }
             string fileExt = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (string.IsNullOrEmpty(fileExt) || !permittedExtensions.Contains(fileExt))
+            if (string.IsNullOrEmpty(fileExt) || !supportedExtensions.Contains(fileExt))
             {
                 return false;
             }
             return true;
         }
 
-        public abstract Task<ICollection<string>> ParseAsync(IFormFile file, int index, string projectPath);
+        public abstract Task<ICollection<string>> ParseAsync(IFormFile file, int startIndex, string projectPath);
     }
 
 }
