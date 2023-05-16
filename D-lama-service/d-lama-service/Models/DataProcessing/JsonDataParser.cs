@@ -5,11 +5,11 @@ namespace d_lama_service.Models.DataProcessing
 {
     public class JsonDataParser : DataParser
     {
-        private readonly string[] _permittedExtensions = { ".json" };
+        private readonly string[] _supportedExtensions = { ".json" };
 
         public override bool IsValidFormat(IFormFile file, string[]? permittedExtensions = null)
         {
-            return base.IsValidFormat(file, _permittedExtensions);
+            return base.IsValidFormat(file, _supportedExtensions);
         }
 
         public override async Task<ICollection<string>> ParseAsync(IFormFile file, int index, string projectPath)
