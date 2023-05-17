@@ -11,10 +11,20 @@ namespace d_lama_service.Models.ProjectModels
         [Required]
         public string FileName { get; set; }
 
+        [Required]
+        public bool IsLabelled { get; set; }
+
         public ReadImageDataPointModel(ImageDataPoint imageDataPoint)
         {
             DataPointIndex = imageDataPoint.DataPointIndex;
             FileName = Path.GetFileName(imageDataPoint.Path);
+        }
+
+        public ReadImageDataPointModel(ImageDataPoint imageDataPoint, bool isLabelled)
+        {
+            DataPointIndex = imageDataPoint.DataPointIndex;
+            FileName = Path.GetFileName(imageDataPoint.Path);
+            IsLabelled = isLabelled;
         }
     }
 }

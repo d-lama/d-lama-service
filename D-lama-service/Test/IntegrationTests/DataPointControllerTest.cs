@@ -656,7 +656,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints";
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
 
             // Act
@@ -671,7 +671,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints";
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -688,7 +688,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints";
             var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -705,7 +705,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -722,7 +722,7 @@ namespace Test.IntegrationTests
         {
             await ClearTextDataPoints();
             // Arrange
-            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteTextDataPoints";
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -739,7 +739,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + (-1) + "/DeleteTextDataPoints";
+            var uri = _apiRoute + "/" + (-1) + "/DeleteDataPoints";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -756,7 +756,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints/" + 1 + "/" + 2;
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
 
             // Act
@@ -771,7 +771,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints/" + 1 + "/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -788,7 +788,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints/" + 1 + "/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -805,7 +805,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints/" + 1 + "/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -822,7 +822,7 @@ namespace Test.IntegrationTests
         {
             await ClearTextDataPoints();
             // Arrange
-            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints/" + 1 + "/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -839,7 +839,7 @@ namespace Test.IntegrationTests
         {
             await AddSomeTextDataPoints(4);
             // Arrange
-            var uri = _apiRoute + "/" + (-1) + "/DeleteTextDataPoints/" + 1 + "/" + 2;
+            var uri = _apiRoute + "/" + (-1) + "/DeleteDataPoints/" + 1 + "/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
