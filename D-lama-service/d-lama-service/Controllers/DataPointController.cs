@@ -440,7 +440,7 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 404. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpDelete("{projectId:int}/DeleteTextDataPoints/{startIndex:int}/{endIndex:int}")]
+        [HttpDelete("{projectId:int}/DeleteDataPoints/{startIndex:int}/{endIndex:int}")]
         public async Task<IActionResult> DeleteTextDataPointRangeAsync(int projectId, int startIndex, int endIndex)
         {
             // Check if the project exists and if user is owner
