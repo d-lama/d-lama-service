@@ -446,7 +446,7 @@ namespace d_lama_service.Controllers
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
         [HttpDelete]
-        [Route("{projectId:int}/DeleteTextDataPoints/{startIndex:int}/{endIndex:int}")]
+        [Route("{projectId:int}/DeleteDataPoints/{startIndex:int}/{endIndex:int}")]
         public async Task<IActionResult> DeleteTextDataPointRangeAsync(int projectId, int startIndex, int endIndex)
         {
             // Check if the project exists and if user is owner
