@@ -359,6 +359,11 @@ namespace d_lama_service.Controllers
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
+            if (project.DataType != "text")
+            {
+                return BadRequest($"The project {project.Name} with ID {project.Id} is not suitable for text edits.");
+            }
+
             var textDataPoints = await _unitOfWork.TextDataPointRepository
                .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
 
@@ -393,6 +398,11 @@ namespace d_lama_service.Controllers
         {
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
+
+            if (project.DataType != "image")
+            {
+                return BadRequest($"The project {project.Name} with ID {project.Id} is not suitable for image edits.");
+            }
 
             var imageDataPoints = await _unitOfWork.ImageDataPointRepository
                .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
