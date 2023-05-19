@@ -1,15 +1,10 @@
-﻿using d_lama_service.Middleware;
-using d_lama_service.Models;
-using d_lama_service.Models.UserViewModels;
+﻿using d_lama_service.Models;
+using d_lama_service.Models.UserModels;
+using d_lama_service.Models.UserModels;
 using d_lama_service.Repositories;
 using Data;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace d_lama_service.Controllers
 {
@@ -45,8 +40,7 @@ namespace d_lama_service.Controllers
         /// <param name="loginRequest"> The credentials of the user. </param>
         /// <returns> Status Code 200 with a token on sucess. </returns>
         [AllowAnonymous]
-        [HttpPost]
-        [Route("AuthToken")]
+        [HttpPost("AuthToken")]
         public async Task<IActionResult> AuthToken([FromBody] LoginModel loginRequest)
         {
             try
@@ -97,8 +91,7 @@ namespace d_lama_service.Controllers
         /// Gets the authenticated user.
         /// </summary>
         /// <returns> The user. </returns>
-        [HttpGet]
-        [Route("Me")]
+        [HttpGet("Me")]
         public async Task<IActionResult> GetMe() 
         {
             User user = await GetAuthenticatedUserAsync();
@@ -155,19 +148,48 @@ namespace d_lama_service.Controllers
             return await GetMe();
         }
 
-        [HttpGet]
-        [Route("TestCheckAuth")]
-        public async Task<IActionResult> CheckAuthentication()
+        /// <summary>
+        /// Gets the user ranking.
+        /// </summary>
+        /// <returns> A ranking list on success, else en 400 error message. </returns>
+        [HttpGet("Ranking")]
+        public async Task<IActionResult> GetUserRanking() 
         {
-            return Ok("If you get this message, then you are authenticated!");
+            var dataPointsCount = (await _unitOfWork.DataPointRespitory.GetAllAsync()).Count();
+            if (dataPointsCount == 0) 
+            {
+                return BadRequest("Currently there is no ranking available, as there are no Projects with datapoints.");
+            }
+
+            var users = await _unitOfWork.UserRepository.GetAllAsync();
+            var ranking = new List<UserRankingModel>();
+            var authUser = await GetAuthenticatedUserAsync();
+            foreach (var user in users) 
+            {                
+                var labeledDataPointsCount = (await _unitOfWork.LabeledDataPointRepository.FindAsync(e => e.UserId == user.Id)).Count();
+                var percentage = (float)labeledDataPointsCount / (float)dataPointsCount;
+                ranking.Add(new UserRankingModel(user.Id, user.FirstName + " " + user.LastName, percentage));
+            }
+
+            var orderedRanking = ranking.OrderByDescending(e => e.Percentage).ToList();
+            var authUserPosition = orderedRanking.FindIndex(e => e.Id == authUser.Id);
+            var data = new { myPositionIndex = authUserPosition, ranking = MakeRankingAnonymous(orderedRanking, authUser.Id)};
+            return Ok(data);
         }
 
-        [AdminAuthorize]
-        [HttpGet]
-        [Route("TestCheckAdmin")]
-        public async Task<IActionResult> CheckAdmin()
+        private List<UserRankingModel> MakeRankingAnonymous(List<UserRankingModel> userRankingModels, int authUserId) 
         {
-            return Ok("If you get this message, then you have admin permissions!");
+            const string maskedUserPrefix = "Lama-";
+            var counter = 1;
+            foreach (var user in userRankingModels) 
+            {
+                if (user.Id != authUserId) 
+                {
+                    user.Name = maskedUserPrefix + counter;
+                    counter++;
+                }
+            }
+            return userRankingModels;
         }
 
         private async Task<User> GetAuthenticatedUserAsync() 

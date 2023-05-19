@@ -13,7 +13,7 @@ using System.Linq.Expressions;
 using d_lama_service;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Newtonsoft.Json;
-using d_lama_service.Models.UserViewModels;
+using d_lama_service.Models.UserModels;
 using Data.ProjectEntities;
 
 namespace Test.IntegrationTests

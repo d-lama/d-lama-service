@@ -1,4 +1,4 @@
-﻿namespace d_lama_service.DataProcessing
+﻿namespace d_lama_service.Models.DataProcessing
 {
     /// <summary>
     /// Parser for data point files.
