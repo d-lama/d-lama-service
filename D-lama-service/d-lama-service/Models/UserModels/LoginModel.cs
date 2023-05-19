@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace d_lama_service.Models.UserViewModels
+namespace d_lama_service.Models.UserModels
 {
     public class LoginModel
     {

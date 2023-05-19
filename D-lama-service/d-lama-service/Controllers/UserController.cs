@@ -1,6 +1,6 @@
 ﻿using d_lama_service.Models;
 using d_lama_service.Models.UserModels;
-using d_lama_service.Models.UserViewModels;
+using d_lama_service.Models.UserModels;
 using d_lama_service.Repositories;
 using Data;
 using Microsoft.AspNetCore.Authorization;
