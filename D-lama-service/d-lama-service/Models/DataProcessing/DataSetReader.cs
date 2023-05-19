@@ -15,7 +15,10 @@ namespace d_lama_service.Models.DataProcessing
             { ".txt", new TextDataParser() },
             { ".csv", new TextDataParser() },
             { ".json", new JsonDataParser() },
-            { ".zip", new ImageDataParser() }
+            { ".zip", new ImageDataParser() },
+            { ".jpg", new ImageDataParser() },
+            { ".jpeg", new ImageDataParser() },
+            { ".png", new ImageDataParser() }
         };
 
         public DataSetReader() { }

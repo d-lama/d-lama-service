@@ -1,9 +1,9 @@
 ﻿using d_lama_service.Models.ProjectModels;
 using d_lama_service.Models.UserModels;
 using Data.ProjectEntities;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -43,11 +43,12 @@ namespace Test.IntegrationTests
         public async Task AfterEach()
         {
             await ClearTextDataPoints();
+            await ClearImageDataPoints();
             await CleanupProjects();
         }
 
         [TestMethod]
-        public async Task GetAllTextDataPoints_NoLogin_ReturnsUnauthorized()
+        public async Task GetAllDataPoints_TextNoLogin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id;
@@ -61,7 +62,21 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetAllTextDataPoints_InvalidId_ReturnsNotFound()
+        public async Task GetAllDataPoints_ImageNoLogin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id;
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetAllDataPoints_TextInvalidId_ReturnsNotFound()
         {
             // Arrange
             var uri = _apiRoute + "/-1";
@@ -77,11 +92,28 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetAllTextDataPoints_DataPointsPresent_ReturnsOK()
+        public async Task GetAllDataPoints_TextDataPointsPresent_ReturnsOK()
         {
             // Arrange
             await AddSomeTextDataPoints(3);
             var uri = _apiRoute + "/" + _adminProjectText.Id;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetAllDataPoints_ImageDataPointsPresent_ReturnsOK()
+        {
+            // Arrange
+            await AddSomeImageDataPoints();
+            var uri = _apiRoute + "/" + _adminProjectImage.Id;
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -1175,6 +1207,7 @@ namespace Test.IntegrationTests
 
         private async Task SetUpProjects()
         {
+            // test admin project for text data points
             _adminProjectText = new Project("AdminProject", "My Description");
             _adminProjectText.Labels.Add(new Label("TestSet", "TestDesc"));
             var adminUser = await Context.Users.Where(u => u.Email == Admin.Email).FirstOrDefaultAsync();
@@ -1182,6 +1215,7 @@ namespace Test.IntegrationTests
             await Context.AddAsync(_adminProjectText);
             await Context.SaveChangesAsync();
 
+            // test admin project for image data points
             _adminProjectImage = new Project("AdminProject", "My Description", _testProjectDirectoryPath);
             _adminProjectImage.Labels.Add(new Label("TestSet", "TestDesc"));
             adminUser?.Projects.Add(_adminProjectImage);
@@ -1192,7 +1226,6 @@ namespace Test.IntegrationTests
             Directory.CreateDirectory(projectDirectoryPath);
             _adminProjectImage.StoragePath = projectDirectoryPath;
             Context.Update(_adminProjectImage);
-
             await Context.SaveChangesAsync();
         }
 
@@ -1227,6 +1260,64 @@ namespace Test.IntegrationTests
             await Context.SaveChangesAsync();
         }
 
+        private async Task AddSomeImageDataPoints()
+        {
+            var filePath = Path.Combine(_testFilesPath, "jpg", "zip_example_JPG_100kB_6_files.zip");
+            var imagePaths = await ProcessZipFile(filePath);
+            int index = 0;
+            foreach (var imagePath in imagePaths)
+            {
+                // create the image data point and add it to the project
+                _adminProjectImage.DataPoints.Add(CreateImageDataPoint(imagePath, index));
+                index++;
+            }
+            await Context.SaveChangesAsync();
+        }
+
+        private async Task<ICollection<string>> ProcessZipFile(string filePath)
+        {
+            ICollection<string> dataPoints = new List<string>();
+            string tempDirPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempDirPath);
+
+            try
+            {
+                using (ZipArchive archive = new ZipArchive(File.OpenRead(filePath)))
+                {
+                    var index = 0;
+                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    {
+                        string imageName = $"image_{index}{Path.GetExtension(entry.Name)}";
+                        string imagePath = Path.Combine(tempDirPath, imageName);
+                        await Task.Run(() => entry.ExtractToFile(imagePath));
+
+                        string newPath = Path.Combine(_adminProjectImage.StoragePath, imageName);
+                        File.Move(imagePath, newPath);
+                        dataPoints.Add(newPath);
+                        index++;
+                    }
+                }
+            }
+            catch
+            {
+                foreach (string addedFile in dataPoints)
+                {
+                    File.Delete(addedFile);
+                }
+                Directory.Delete(tempDirPath, true);
+                throw;
+            }
+            Directory.Delete(tempDirPath, true);
+            return dataPoints;
+        }
+
+        private ImageDataPoint CreateImageDataPoint(string path, int index)
+        {
+            var dataPoint = new ImageDataPoint(path, index);
+            Context.Add(dataPoint);
+            return dataPoint;
+        }
+
         private async Task ClearTextDataPoints()
         {
             var dataPoints = await Context.TextDataPoints.Where(e => e.ProjectId == _adminProjectText.Id).ToListAsync();
@@ -1237,6 +1328,21 @@ namespace Test.IntegrationTests
                     Context.Remove(dataPoint);
                 }
 
+                await Context.SaveChangesAsync();
+            }
+        }
+
+        private async Task ClearImageDataPoints()
+        {
+            var imageDataPoints = await Context.ImageDataPoints.Where(e => e.ProjectId == _adminProjectImage.Id).ToListAsync();
+            if (imageDataPoints.Any())
+            {
+                foreach (var imageDataPoint in imageDataPoints)
+                {
+                    System.IO.File.Delete(imageDataPoint.Path);
+                    Context.Remove(imageDataPoint);
+                }
+                
                 await Context.SaveChangesAsync();
             }
         }
