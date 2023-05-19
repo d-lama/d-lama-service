@@ -1,8 +1,11 @@
 ﻿using d_lama_service.Models.ProjectModels;
 using d_lama_service.Models.UserViewModels;
 using Data.ProjectEntities;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
@@ -15,16 +18,16 @@ namespace Test.IntegrationTests
     public class DataPointControllerTest : APITestBase
     {
         private readonly string _apiRoute = "api/DataPoint";
-        private readonly string? _testProjectDirectoryPath;
-        private readonly string? _testFilesPath;
-        private Project? _adminProjectText;
-        private Project? _adminProjectImage;
+        private readonly string _testProjectDirectoryPath;
+        private readonly string _testFilesPath;
+        private Project _adminProjectText;
+        private Project _adminProjectImage;
 
         public DataPointControllerTest()
         {
-            string? workingDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            _testFilesPath = Path.Combine(workingDir, "IntegrationTests", "TestFiles");
-            _testProjectDirectoryPath = Path.Combine(workingDir, "test_project_files");
+            string workingDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            _testFilesPath = Path.Combine(workingDir ?? string.Empty, "IntegrationTests", "TestFiles");
+            _testProjectDirectoryPath = Path.Combine(workingDir ?? string.Empty, "test_project_files");
         }
 
         /// <summary>
@@ -76,7 +79,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetAllDataPoints_TextInvalidId_ReturnsNotFound()
+        public async Task GetAllDataPoints_InvalidId_ReturnsNotFound()
         {
             // Arrange
             var uri = _apiRoute + "/-1";
@@ -126,7 +129,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetAllTextDataPoints_Empty_ReturnsNotFound()
+        public async Task GetAllDataPoints_Empty_ReturnsNotFound()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id;
@@ -142,7 +145,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetNumberOfTextDataPoints_NoLogin_ReturnsUnauthorized()
+        public async Task GetNumberOfDataPoints_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetNumberOfDataPoints";
@@ -156,7 +159,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetNumberOfTextDataPoints_InvalidId_ReturnsNotFound()
+        public async Task GetNumberOfDataPoints_InvalidId_ReturnsNotFound()
         {
             // Arrange
             var uri = _apiRoute + "/-1" + "/GetNumberOfDataPoints";
@@ -172,7 +175,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetNumberOfTextDataPoints_NoDataPointsPresent_ReturnsOK()
+        public async Task GetNumberOfDataPoints_NoDataPointsPresent_ReturnsOK()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetNumberOfDataPoints";
@@ -191,10 +194,10 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetNumberOfTextDataPoints_DataPointsPresent_ReturnsOK()
+        public async Task GetNumberOfDataPoints_TextDataPointsPresent_ReturnsOK()
         {
             // Arrange
-            await AddSomeTextDataPoints(3);
+            await AddSomeTextDataPoints(6);
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetNumberOfDataPoints";
             var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
@@ -207,11 +210,31 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            Assert.AreEqual(3, numberOfDataPoints);
+            Assert.AreEqual(6, numberOfDataPoints);
         }
 
         [TestMethod]
-        public async Task GetTextDataPointByIndex_NoLogin_ReturnsUnauthorized()
+        public async Task GetNumberOfDataPoints_ImageDataPointsPresent_ReturnsOK()
+        {
+            // Arrange
+            await AddSomeImageDataPoints();
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/GetNumberOfDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var numberOfDataPoints = JsonConvert.DeserializeObject<int>(responseContent);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(6, numberOfDataPoints);
+        }
+
+        [TestMethod]
+        public async Task GetDataPointByIndex_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
             await AddSomeTextDataPoints(3);
@@ -226,7 +249,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetTextDataPointByIndex_DataPointsPresent_ReturnsOK()
+        public async Task GetDataPointByIndex_TextDataPointsPresent_ReturnsOK()
         {
             // Arrange
             await AddSomeTextDataPoints(3);
@@ -243,7 +266,24 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetTextDataPointByIndex_Empty_ReturnsNotFound()
+        public async Task GetDataPointByIndex_ImageDataPointsPresent_ReturnsOK()
+        {
+            // Arrange
+            await AddSomeImageDataPoints();
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/" + 1;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetDataPointByIndex_Empty_ReturnsNotFound()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/" + 1;
@@ -259,7 +299,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetTextDataPointRange_NoLogin_ReturnsUnauthorized()
+        public async Task GetDataPointRange_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
             await AddSomeTextDataPoints(4);
@@ -274,7 +314,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetTextDataPointRange_DataPointsPresent_ReturnsOK()
+        public async Task GetDataPointRange_TextDataPointsPresent_ReturnsOK()
         {
             // Arrange
             await AddSomeTextDataPoints(4);
@@ -291,7 +331,24 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetTextDataPointRange_Empty_ReturnsNotFound()
+        public async Task GetDataPointRange_ImageDataPointsPresent_ReturnsOK()
+        {
+            // Arrange
+            await AddSomeImageDataPoints();
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/" + 1 + "/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetDataPointRange_Empty_ReturnsNotFound()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/" + 1 + "/" + 2;
@@ -421,6 +478,259 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
+        public async Task UploadSingleImageDataPoint_NoLogin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadSingleImageDataPoint_NonAdmin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadSingleImageDataPoint_WrongAdmin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadSingleImageDataPoint_Jpg100KbFirstEntry_ReturnsOk()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadSingleImageDataPoint_Png500KbFirstEntry_ReturnsOk()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "png", "file_example_PNG_500kB.png");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadSingleImageDataPoint_Jpeg1MbFirstEntry_ReturnsOk()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpeg", "file_example_JPEG_1MB.jpeg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadSingleImageDataPoint_Jpg15MbFirstEntry_ReturnsOk()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_15MB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadSingleImageDataPoint_Jpg100KbAppendToExisting_ReturnsOk()
+        {
+            // Arrange
+            await AddSomeImageDataPoints();
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadSingleImageDataPoint_Png500KbAppendToExisting_ReturnsOk()
+        {
+            // Arrange
+            await AddSomeImageDataPoints();
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "png", "file_example_PNG_500kB.png");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadSingleImageDataPoint_Jpeg1MbAppendToExisting_ReturnsOk()
+        {
+            // Arrange
+            await AddSomeImageDataPoints();
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpeg", "file_example_JPEG_1MB.jpeg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadSingleImageDataPoint_Jpg15MbAppendToExisting_ReturnsOk()
+        {
+            // Arrange
+            await AddSomeImageDataPoints();
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_15MB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadSingleImageDataPoint_WrongProjectId_ReturnsNotFound()
+        {
+            // Arrange
+            await AddSomeTextDataPoints(3);
+            var uri = _apiRoute + "/" + (-1) + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadMultipleImageDataPoints_Jpg100Kb_ReturnsOk()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            for (int i = 0; i < 1000; i++)
+            {
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Content = content;
+
+                // Act
+                var response = await Client.SendAsync(request);
+
+                // Assert
+                Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            }
+        }
+
+        [TestMethod]
         public async Task UploadTextDataPoints_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
@@ -546,6 +856,131 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
+        public async Task UploadImageDataPoints_NoLogin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadImageDataPoints_NonAdmin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadImageDataPoints_WrongAdmin_ReturnsUnauthorized()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "zip_example_JPG_100kB_6_files.zip");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadImageDataPoints_UnsupportedFile_ReturnsBadRequest()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "unsupported", "test_file.xlsx");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadImageDataPoints_ValidZipFileJpg_ReturnsOK()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "zip_example_JPG_100kB_6_files.zip");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadImageDataPoints_ValidZipFilePng_ReturnsOK()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "png", "zip_example_PNG_500kB_6_files.zip");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task UploadImageDataPoints_ValidZipFileJpeg_ReturnsOK()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpeg", "zip_example_JPEG_500kB_6_files.zip");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
         public async Task EditTextDataPoint_NoLogin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
@@ -601,6 +1036,26 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task EditTextDataPoint_WrongDataType_ReturnsBadRequest()
+        {
+            await AddSomeTextDataPoints(4);
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/EditTextDataPoint/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var content = new StringContent(JsonConvert.SerializeObject(
+                new EditTextDataPointModel { Content = "My new data point content." }), Encoding.UTF8, "application/json");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
         [TestMethod]
@@ -666,7 +1121,6 @@ namespace Test.IntegrationTests
         [TestMethod]
         public async Task EditTextDataPoint_NoDataPointsPresent_ReturnsNotFound()
         {
-            await ClearTextDataPoints();
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/EditTextDataPoint/" + (1);
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
@@ -684,7 +1138,164 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllTextDataPoints_NoLogin_ReturnsUnauthorized()
+        public async Task EditImageDataPoint_NoLogin_ReturnsUnauthorized()
+        {
+            await AddSomeImageDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/EditImageDataPoint/" + 2;
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task EditImageDataPoint_NonAdmin_ReturnsUnauthorized()
+        {
+            await AddSomeImageDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/EditImageDataPoint/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task EditImageDataPoint_WrongAdmin_ReturnsUnauthorized()
+        {
+            await AddSomeImageDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/EditImageDataPoint/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task EditImageDataPoint_WrongDataType_ReturnsBadRequest()
+        {
+            await AddSomeImageDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/EditImageDataPoint/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task EditImageDataPoint_CorrectAdmin_ReturnsOK()
+        {
+            await AddSomeImageDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/EditImageDataPoint/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task EditImageDataPoint_WrongProjectId_ReturnsNotFound()
+        {
+            await AddSomeImageDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + (-1) + "/EditImageDataPoint/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task EditImageDataPoint_WrongDataPointId_ReturnsNotFound()
+        {
+            await AddSomeImageDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/EditImageDataPoint/" + (-1);
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task EditImageDataPoint_NoDataPointsPresent_ReturnsNotFound()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/EditImageDataPoint/" + (1);
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            var filePath = Path.Combine(_testFilesPath, "jpg", "file_example_JPG_100kB.jpg");
+            var content = GetMultipartFormDataContent(filePath);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = content;
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task DeleteAllDataPoints_NoLogin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -699,7 +1310,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllTextDataPoints_NonAdmin_ReturnsUnauthorized()
+        public async Task DeleteAllDataPoints_NonAdmin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -716,7 +1327,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllTextDataPoints_WrongAdmin_ReturnsUnauthorized()
+        public async Task DeleteAllDataPoints_WrongAdmin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -733,7 +1344,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllTextDataPoints_CorrectAdmin_ReturnsOK()
+        public async Task DeleteAllDataPoints_TextCorrectAdmin_ReturnsOK()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -750,9 +1361,25 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllTextDataPoints_NoDataPointsPresent_ReturnsNotFound()
+        public async Task DeleteAllDataPoints_ImageCorrectAdmin_ReturnsOK()
         {
-            await ClearTextDataPoints();
+            await AddSomeImageDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/DeleteDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task DeleteAllDataPoints_NoDataPointsPresent_ReturnsNotFound()
+        {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
@@ -767,7 +1394,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllTextDataPoints_WrongProjectId_ReturnsNotFound()
+        public async Task DeleteAllDataPoints_WrongProjectId_ReturnsNotFound()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -784,7 +1411,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteTextDataPointRange_NoLogin_ReturnsUnauthorized()
+        public async Task DeleteDataPointRange_NoLogin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -799,7 +1426,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteTextDataPointRange_NonAdmin_ReturnsUnauthorized()
+        public async Task DeleteDataPointRange_NonAdmin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -816,7 +1443,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteTextDataPointRange_WrongAdmin_ReturnsUnauthorized()
+        public async Task DeleteDataPointRange_WrongAdmin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -833,7 +1460,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteTextDataPointRange_CorrectAdmin_ReturnsOK()
+        public async Task DeleteDataPointRange_TextCorrectAdmin_ReturnsOK()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -850,9 +1477,25 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteTextDataPointRange_NoDataPointsPresent_ReturnsNotFound()
+        public async Task DeleteDataPointRange_ImageCorrectAdmin_ReturnsOK()
         {
-            await ClearTextDataPoints();
+            await AddSomeImageDataPoints();
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProjectImage.Id + "/DeleteDataPoints/" + 1 + "/" + 2;
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task DeleteDataPointRange_NoDataPointsPresent_ReturnsNotFound()
+        {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints/" + 1 + "/" + 2;
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
@@ -867,7 +1510,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteTextDataPointRange_WrongProjectId_ReturnsNotFound()
+        public async Task DeleteDataPointRange_WrongProjectId_ReturnsNotFound()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
