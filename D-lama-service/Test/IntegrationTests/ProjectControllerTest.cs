@@ -1,5 +1,5 @@
 ﻿using d_lama_service.Models.ProjectModels;
-using d_lama_service.Models.UserViewModels;
+using d_lama_service.Models.UserModels;
 using Data.ProjectEntities;
 using Newtonsoft.Json;
 using System.Net;
@@ -490,6 +490,63 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetUserRanking_InvalidOwner()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/Ranking";
+            var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetUserRanking_NoDataPoints()
+        {
+            // Arrange
+            var uri = _apiRoute + "/" + _adminProject.Id + "/Ranking";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetUserRanking_Valid()
+        {
+            // Arrange
+            await AddDataPoints();
+            var uri = _apiRoute + "/" + _adminProject.Id + "/Ranking";
+            var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        private async Task AddDataPoints() 
+        {
+            var dataPoint = new TextDataPoint("Test", 1);
+            _adminProject.DataPoints.Add(dataPoint);
+            await Context.AddAsync(dataPoint);
+            await Context.SaveChangesAsync();
         }
 
         private async Task SetUpProjects() 

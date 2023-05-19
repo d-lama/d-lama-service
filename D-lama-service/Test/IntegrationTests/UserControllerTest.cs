@@ -1,5 +1,6 @@
 ﻿using d_lama_service;
-using d_lama_service.Models.UserViewModels;
+using d_lama_service.Models.UserModels;
+using Data.ProjectEntities;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Newtonsoft.Json;
 using System.Net;
@@ -13,6 +14,7 @@ namespace Test.IntegrationTests
     {
         private readonly string _apiRoute = "api/User";
         private string _testEmailAddress = "this_is_a_test@gmail.com";
+        private Project _testProject; 
 
         /// <summary>
         /// Before each run.
@@ -307,6 +309,48 @@ namespace Test.IntegrationTests
 
             // Assert
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetUserRanking_Unauthorized() 
+        {
+            // Arrange
+            var uri = _apiRoute + "/Ranking";
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task GetUserRanking_Valid()
+        {
+            // Arrange
+            await AddDataPoints();
+            var uri = _apiRoute + "/Ranking";
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Act
+            var response = await Client.SendAsync(request);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        private async Task AddDataPoints() 
+        {
+            _testProject = new Project("TestProject", "");
+            var dataPoint = new TextDataPoint("my content", 0);
+            _testProject.DataPoints.Add(dataPoint);
+            var adminUser = Context.Users.Where(e => e.Id == Admin.Id).First();
+            adminUser.Projects.Add(_testProject);
+            await Context.AddAsync(_testProject);
+            await Context.SaveChangesAsync();
         }
 
         private async Task CleanUpTestUser()
