@@ -36,8 +36,7 @@ namespace d_lama_service.Controllers
         /// <param name="projectId"> The ID of the project. </param>
         /// <returns> 200 with a list of data points or 404 if there are no data points at all. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
-        [HttpGet]
-        [Route("{projectId:int}")]
+        [HttpGet("{projectId:int}")]
         public async Task<IActionResult> GetAllTextDataPointsAsync(int projectId)
         {
             var project = await GetProjectAsync(projectId);
@@ -56,8 +55,7 @@ namespace d_lama_service.Controllers
         /// <param name="projectId"> The ID of the project. </param>
         /// <returns> The number of text data points. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
-        [HttpGet]
-        [Route("{projectId:int}/GetNumberOfTextDataPoints")]
+        [HttpGet("{projectId:int}/GetNumberOfTextDataPoints")]
         public async Task<IActionResult> GetNumberOfTextDataPointsAsync(int projectId)
         {
             var project = await GetProjectAsync(projectId);
@@ -74,8 +72,7 @@ namespace d_lama_service.Controllers
         /// <param name="dataPointIndex"> The index of the data point. </param>
         /// <returns> 200 with a list of data points or 404 if there are no data points at all. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
-        [HttpGet]
-        [Route("{projectId:int}/{dataPointIndex:int}")]
+        [HttpGet("{projectId:int}/{dataPointIndex:int}")]
         public async Task<IActionResult> GetTextDataPointAsync(int projectId, int dataPointIndex)
         {
             var project = await GetProjectAsync(projectId);
@@ -97,8 +94,7 @@ namespace d_lama_service.Controllers
         /// <param name="endIndex"> The end of index range (inclusive). </param>
         /// <returns> A da</returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
-        [HttpGet]
-        [Route("{projectId:int}/{startIndex:int}/{endIndex:int}")]
+        [HttpGet("{projectId:int}/{startIndex:int}/{endIndex:int}")]
         public async Task<IActionResult> GetTextDataPointRangeAsync(int projectId, int startIndex, int endIndex)
         {
             var project = await GetProjectAsync(projectId);
@@ -219,8 +215,7 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpDelete]
-        [Route("{projectId:int}/DeleteTextDataPoints")]
+        [HttpDelete("{projectId:int}/DeleteTextDataPoints")]
         public async Task<IActionResult> DeleteAllTextDataPointsAsync(int projectId)
         {
             // Check if the project exists and if user is owner
@@ -253,8 +248,7 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpDelete]
-        [Route("{projectId:int}/DeleteTextDataPoints/{startIndex:int}/{endIndex:int}")]
+        [HttpDelete("{projectId:int}/DeleteTextDataPoints/{startIndex:int}/{endIndex:int}")]
         public async Task<IActionResult> DeleteTextDataPointRangeAsync(int projectId, int startIndex, int endIndex)
         {
             // Check if the project exists and if user is owner
@@ -288,8 +282,7 @@ namespace d_lama_service.Controllers
         /// <param name="labelId"> The label id used to label it. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
-        [HttpPost]
-        [Route("{projectId:int}/LabelDataPoint/{dataPointIndex:int}")]
+        [HttpPost("{projectId:int}/LabelDataPoint/{dataPointIndex:int}")]
         public async Task<IActionResult> LabelDataPoint(int projectId, int dataPointIndex, [FromBody] int labelId) 
         {
             var labeledDataPoint = await GetLabeledDataPointOfUserAsync(projectId, dataPointIndex);
@@ -321,8 +314,7 @@ namespace d_lama_service.Controllers
         /// <param name="dataPointIndex"> The data point index to be deleted. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
-        [HttpDelete]
-        [Route("{projectId:int}/LabelDataPoint/{dataPointIndex:int}")]
+        [HttpDelete("{projectId:int}/LabelDataPoint/{dataPointIndex:int}")]
         public async Task<IActionResult> RemoveLabelDataPoint(int projectId, int dataPointIndex) 
         {
             var labeledDataPoint = await GetLabeledDataPointOfUserAsync(projectId, dataPointIndex);
@@ -343,15 +335,14 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 with the list of information about the datapoints, if the project is found and the owner made the request, else statuscode 400. </returns>
         [AdminAuthorize]
         [TypeFilter(typeof(RESTExceptionFilter))]
-        [HttpGet]
-        [Route("{projectId:int}/GetLabaledData")]
+        [HttpGet("{projectId:int}/GetLabeledData")]
         public async Task<IActionResult> GetLabeledDataForProject(int projectId) 
         {
             var project = await GetProjectWithOwnerCheckAsync(projectId, e => e.DataPoints);
             var labeledDataModelList = new Dictionary<int,LabeledDataPointModel>();  
             foreach (var dataPoint in project.DataPoints) 
             {
-                var dataPointStats = await _unitOfWork.LabeledDataPointRepository.GetLabeledDataPointStatistic(dataPoint.Id);
+                var dataPointStats = await _unitOfWork.LabeledDataPointRepository.GetLabeledDataPointStatisticAsync(dataPoint.Id);
                 labeledDataModelList.Add(dataPoint.Id, new LabeledDataPointModel(dataPointStats));
             }
             return Ok(labeledDataModelList);
@@ -365,13 +356,12 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 with the label details, if the request was made from the project owner and the project is found, else statuscode 400. </returns>
         [AdminAuthorize]
         [TypeFilter(typeof(RESTExceptionFilter))]
-        [HttpGet]
-        [Route("{projectId:int}/GetLabaledData/{dataPointIndex:int}")]
+        [HttpGet("{projectId:int}/GetLabeledData/{dataPointIndex:int}")]
         public async Task<IActionResult> GetLabeledDataPointForProject(int projectId, int dataPointIndex) 
         {
             await GetProjectWithOwnerCheckAsync(projectId); // for owner check
             var dataPointId = (await GetDataPointFromProjectAsync(projectId, dataPointIndex)).Id;
-            var dataPointStats = await _unitOfWork.LabeledDataPointRepository.GetLabeledDataPointStatistic(dataPointId);
+            var dataPointStats = await _unitOfWork.LabeledDataPointRepository.GetLabeledDataPointStatisticAsync(dataPointId);
             return Ok(new LabeledDataPointModel(dataPointStats));
         }
 
@@ -458,16 +448,14 @@ namespace d_lama_service.Controllers
             return label;
         }
 
-
         // TODO: refactor, find solution for GetProjectWithOwnerCheckAsync that is a duplicate of the one in ProjectController
         /// <summary>
         /// Gets a project with checking if the user is owner of the project. 
         /// </summary>
         /// <param name="projectId"> The id of the project. </param>
-        /// <returns> The found project. </returns>
+        /// <param name="includes"> The other tables to load (join). </param>
+        /// <returns> The found project with its dependencies. </returns>
         /// <exception cref="RESTException"> Throws Rest Excetption if project is not found or the current user is not the owner. </exception>
-        
-        // TODO: Method comments
         private async Task<Project> GetProjectWithOwnerCheckAsync(int projectId, params Expression<Func<Project, object>>[] includes)
         {
             Project project = await GetProjectAsync(projectId, includes);
