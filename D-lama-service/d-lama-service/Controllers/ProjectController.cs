@@ -124,7 +124,7 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
-        /// Edits a new project with the data passed in the request body.
+        /// Edits a project with the data passed in the request body.
         /// </summary>
         /// <param name="id"> The project ID. </param>
         /// <param name="projectForm"> The project form containing all needed information to edit a project. </param>
@@ -153,6 +153,7 @@ namespace d_lama_service.Controllers
 
             project.Name = projectForm.Name ?? project.Name;
             project.Description = projectForm.Description ?? project.Description;
+            project.UpdateDate = DateTime.UtcNow;
 
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();

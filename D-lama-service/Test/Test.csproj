@@ -38,7 +38,28 @@
     <None Update="IntegrationTests\TestFiles\csv\test_file_empty.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="IntegrationTests\TestFiles\jpg\file_example_JPG_100kB.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="IntegrationTests\TestFiles\jpg\file_example_JPG_1MB.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="IntegrationTests\TestFiles\jpg\file_example_JPG_500kB.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="IntegrationTests\TestFiles\jpg\zip_example_JPG_100kB_6_files.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="IntegrationTests\TestFiles\json\test_file_3_lines.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="IntegrationTests\TestFiles\png\file_example_PNG_1MB.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="IntegrationTests\TestFiles\png\file_example_PNG_500kB.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="IntegrationTests\TestFiles\png\zip_example_PNG_500kB_6_files.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="IntegrationTests\TestFiles\txt\test_file_3_lines.txt">
