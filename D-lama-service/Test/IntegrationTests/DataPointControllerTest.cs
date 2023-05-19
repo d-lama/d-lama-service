@@ -1766,7 +1766,7 @@ namespace Test.IntegrationTests
         public async Task GetLabeledDataForProject_InvalidOwner()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/GetLabeledData";
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetLabeledData";
             var token = await GetAuthToken(new LoginModel { Email = Admin2.Email, Password = Admin2.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -1783,7 +1783,7 @@ namespace Test.IntegrationTests
         public async Task GetLabeledDataForProject_ValidRequest_NoDataPoints()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/GetLabeledData";
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetLabeledData";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -1801,7 +1801,7 @@ namespace Test.IntegrationTests
         {
             // Arrange
             await AddSomeTextDataPoints(10);
-            var uri = _apiRoute + "/" + _adminProject.Id + "/GetLabeledData";
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetLabeledData";
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -1817,7 +1817,7 @@ namespace Test.IntegrationTests
         public async Task GetLabeledDataPointForProject_InvalidDataPointIndex()
         {
             // Arrange
-            var uri = _apiRoute + "/" + _adminProject.Id + "/GetLabeledData/" + -1;
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetLabeledData/" + -1;
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -1836,7 +1836,7 @@ namespace Test.IntegrationTests
             await AddSomeTextDataPoints(1);
             var project = await GetFullAdminProjectAsync();
             var validDataPointIndex = project.DataPoints.FirstOrDefault()!.DataPointIndex;
-            var uri = _apiRoute + "/" + _adminProject.Id + "/GetLabeledData/" + validDataPointIndex;
+            var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetLabeledData/" + validDataPointIndex;
             var token = await GetAuthToken(new LoginModel { Email = Admin.Email, Password = Admin.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);

@@ -155,7 +155,7 @@ namespace d_lama_service.Controllers
         [HttpGet("Ranking")]
         public async Task<IActionResult> GetUserRanking() 
         {
-            var dataPointsCount = (await _unitOfWork.DataPointRespitory.GetAllAsync()).Count();
+            var dataPointsCount = (await _unitOfWork.DataPointRepository.GetAllAsync()).Count();
             if (dataPointsCount == 0) 
             {
                 return BadRequest("Currently there is no ranking available, as there are no Projects with datapoints.");

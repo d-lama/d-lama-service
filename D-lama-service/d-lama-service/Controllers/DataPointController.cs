@@ -432,50 +432,6 @@ namespace d_lama_service.Controllers
         /// <summary>
         /// Deletes all data points of a projact with a given project ID.
         /// </summary>
-        /// <param name="dataPointIndex"> The data point index. </param>
-        /// <param name="uploadedFile"> The updated file that will replace the currently stored one. </param>
-        /// <returns> Statuscode 200 on success, else Statuscode 400 or 404. </returns>
-        [TypeFilter(typeof(RESTExceptionFilter))]
-        [AdminAuthorize]
-        [HttpPatch("{projectId:int}/EditImageDataPoint/{dataPointIndex:int}")]
-        public async Task<IActionResult> EditImageDataPointAsync(int projectId, int dataPointIndex, IFormFile uploadedFile)
-        {
-            // Check if the project exists and if user is owner
-            var project = await GetProjectWithOwnerCheckAsync(projectId);
-
-            if (project.DataType != "image")
-            {
-                return BadRequest($"The project {project.Name} with ID {project.Id} is not suitable for image edits.");
-            }
-
-            var imageDataPoints = await _unitOfWork.ImageDataPointRepository
-               .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
-
-            if (!imageDataPoints.Any())
-            {
-                return NotFound("Data point not found.");
-            }
-
-            var imageDataPoint = imageDataPoints.First();
-
-            // replace image in file system
-            System.IO.File.Delete(imageDataPoint.Path);
-            DataSetReader dataSetReader = new DataSetReader();
-            ICollection<string> imagePaths = await dataSetReader.ReadFileAsync(uploadedFile, imageDataPoint.DataPointIndex, project.StoragePath);
-
-            imageDataPoint.Path = imagePaths.First();
-            imageDataPoint.UpdateDate = DateTime.UtcNow;
-            imageDataPoint.Version++;
-
-            _unitOfWork.ImageDataPointRepository.Update(imageDataPoint);
-            await _unitOfWork.SaveAsync();
-
-            return Ok();
-        }
-
-        /// <summary>
-        /// Deletes all data points of a projact with a given project ID.
-        /// </summary>
         /// <param name="projectId"> The project ID. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 404. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
@@ -828,7 +784,7 @@ namespace d_lama_service.Controllers
 
         private async Task<bool> IsDataPointLabeledByUser(int projectId, int dataPointIndex)
         {
-            var labeledDataPoint = await GetLabeledDataPointAsync(projectId, dataPointIndex);
+            var labeledDataPoint = await GetLabeledDataPointOfUserAsync(projectId, dataPointIndex);
             if (labeledDataPoint != null)
             {
                 return true;

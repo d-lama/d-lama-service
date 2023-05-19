@@ -2,7 +2,7 @@
 using System.IO;
 using System.IO.Compression;
 
-namespace d_lama_service.DataProcessing
+namespace d_lama_service.Models.DataProcessing
 {
     public class ImageDataParser : DataParser
     {
