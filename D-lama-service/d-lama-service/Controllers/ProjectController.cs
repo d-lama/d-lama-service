@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using d_lama_service.Middleware;
 using System.Net;
 using System.Linq.Expressions;
+using d_lama_service.Models.UserModels;
 
 namespace d_lama_service.Controllers
 {
@@ -169,8 +170,7 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpPost]
-        [Route("{id:int}/Labels/")]
+        [HttpPost("{id:int}/Labels/")]
         public async Task<IActionResult> AddLabels(int id, [FromBody] LabelSetModel[] newLabels) 
         {
             var project = await GetProjectWithOwnerCheckAsync(id, e => e.Labels);
@@ -199,8 +199,7 @@ namespace d_lama_service.Controllers
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpDelete]
-        [Route("{id:int}/Labels/{labelId:int}")]
+        [HttpDelete("{id:int}/Labels/{labelId:int}")]
         public async Task<IActionResult> RemoveLabel(int id, int labelId)
         {
             await GetProjectWithOwnerCheckAsync(id);
@@ -221,6 +220,36 @@ namespace d_lama_service.Controllers
             await _unitOfWork.SaveAsync();
 
             return Ok();
+        }
+
+        /// <summary>
+        /// Gets a ranking overview for a project. Get a ranking table with the processes of each user.
+        /// </summary>
+        /// <param name="id"> The id of the project. </param>
+        /// <returns> The ranking on success, else an 400 error. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [AdminAuthorize]
+        [HttpGet("{id:int}/Ranking")]
+        public async Task<IActionResult> GetUserRanking(int id) 
+        {
+            var project = await GetProjectWithOwnerCheckAsync(id, e => e.DataPoints);
+            var dataPointIds = project.DataPoints.Select(e => e.Id);
+            if (dataPointIds == null || !dataPointIds.Any()) 
+            {
+                return BadRequest("You need to add DataPoints first, before you can get a ranking!");
+            }
+
+            var users = await _unitOfWork.UserRepository.GetAllAsync();
+
+            var ranking = new List<UserRankingModel>();
+
+            foreach (var user in users ) 
+            {
+                var labeledPointsCount = (await _unitOfWork.LabeledDataPointRepository.FindAsync(e => e.UserId == user.Id && dataPointIds.Contains(e.DataPointId))).Count();
+                var percentage = (float)labeledPointsCount / (float)dataPointIds.Count();
+                ranking.Add(new UserRankingModel(user.Id, user.FirstName + " " + user.LastName, percentage));
+            }
+            return Ok(ranking.OrderByDescending(e => e.Percentage));
         }
 
         /// <summary>
