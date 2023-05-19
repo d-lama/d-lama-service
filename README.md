@@ -44,4 +44,3 @@ Newly we directly merge changes from a **feature branch** into the **master** br
 - [Stefanie Sigrist](https://github.com/sigrist3)
 - [Gianmarco Güntert](https://github.com/guentgia)
 - [Joel Grand](https://github.com/joelgrand)
-
