@@ -4,6 +4,12 @@ using System.Text.Json.Serialization;
 
 namespace Data.ProjectEntities
 {
+    public enum ProjectDataType
+    {
+        Text,
+        Image
+    }
+
     /// <summary>
     /// Project entity.
     /// </summary>
@@ -23,7 +29,7 @@ namespace Data.ProjectEntities
         public DateTime UpdateDate { get; set; }
 
         [Required]
-        public string DataType { get; set; }
+        public ProjectDataType DataType { get; set; }
 
         [Required]
         public string StoragePath { get; set; }
@@ -45,7 +51,7 @@ namespace Data.ProjectEntities
             Name = name;
             Description = description;
             UpdateDate = DateTime.UtcNow;
-            DataType = "text";
+            DataType = ProjectDataType.Text;
             StoragePath = "no path available";
         }
 
@@ -54,7 +60,7 @@ namespace Data.ProjectEntities
             Name = name;
             Description = description;
             UpdateDate = DateTime.UtcNow;
-            DataType = "image";
+            DataType = ProjectDataType.Image;
             StoragePath = storagePath;
         }
     }

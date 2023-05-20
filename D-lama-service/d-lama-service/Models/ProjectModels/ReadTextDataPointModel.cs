@@ -11,12 +11,6 @@ namespace d_lama_service.Models.ProjectModels
         [Required]
         public bool IsLabelled { get; set; }
 
-        public ReadTextDataPointModel(TextDataPoint textDataPoint) : base(textDataPoint)
-        {
-            DataPointIndex = textDataPoint.DataPointIndex;
-            IsLabelled = false;
-        }
-
         public ReadTextDataPointModel(TextDataPoint textDataPoint, bool isLabelled) : base(textDataPoint)
         {
             DataPointIndex = textDataPoint.DataPointIndex;

@@ -43,7 +43,7 @@ namespace d_lama_service.Controllers
         {
             var project = await GetProjectAsync(projectId);
 
-            if (project.DataType == "text")
+            if (project.DataType == ProjectDataType.Text)
             {
                 var responseList = new List<ReadTextDataPointModel>();
                 var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
@@ -60,7 +60,7 @@ namespace d_lama_service.Controllers
 
                 return Ok(responseList);
             }
-            else if (project.DataType == "image")
+            else if (project.DataType == ProjectDataType.Image)
             {
                 var responseList = new List<ReadImageDataPointModel>();
                 var imageDataPoints = await _unitOfWork.ImageDataPointRepository.FindAsync(e => e.ProjectId == projectId);
@@ -110,7 +110,7 @@ namespace d_lama_service.Controllers
         {
             var project = await GetProjectAsync(projectId);
 
-            if (project.DataType == "text")
+            if (project.DataType == ProjectDataType.Text)
             {
                 var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
                 if (!textDataPoints.Any())
@@ -121,7 +121,7 @@ namespace d_lama_service.Controllers
                 var isLableled = await IsDataPointLabeledByUser(project.Id, textDataPoint.DataPointIndex);
                 return Ok(new ReadTextDataPointModel(textDataPoint, isLableled));
             }
-            else if (project.DataType == "image")
+            else if (project.DataType == ProjectDataType.Image)
             {
                 var imageDataPoints = await _unitOfWork.ImageDataPointRepository.FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
                 if (!imageDataPoints.Any())
@@ -154,7 +154,7 @@ namespace d_lama_service.Controllers
         {
             var project = await GetProjectAsync(projectId);
 
-            if (project.DataType == "text")
+            if (project.DataType == ProjectDataType.Text)
             {
                 var responseList = new List<ReadTextDataPointModel>();
                 var textDataPoints = await _unitOfWork.TextDataPointRepository
@@ -173,7 +173,7 @@ namespace d_lama_service.Controllers
 
                 return Ok(responseList);
             }
-            else if (project.DataType == "image")
+            else if (project.DataType == ProjectDataType.Image)
             {
                 var responseList = new List<ReadImageDataPointModel>();
                 var imageDataPoints = await _unitOfWork.ImageDataPointRepository
@@ -187,7 +187,7 @@ namespace d_lama_service.Controllers
                 foreach (var imageDataPoint in imageDataPoints)
                 {
                     var isLableled = await IsDataPointLabeledByUser(project.Id, imageDataPoint.DataPointIndex);
-                    responseList.Add(new ReadImageDataPointModel(imageDataPoint));
+                    responseList.Add(new ReadImageDataPointModel(imageDataPoint, isLableled));
                 }
 
                 return Ok(responseList);
@@ -235,7 +235,7 @@ namespace d_lama_service.Controllers
             // Check if the project exists
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
-            if (project.DataType != "text")
+            if (project.DataType != ProjectDataType.Text)
             {
                 return BadRequest("The project data type must be set to text in order to upload text content.");
             }
@@ -277,7 +277,7 @@ namespace d_lama_service.Controllers
             // Check if the project exists
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
-            if (project.DataType != "image")
+            if (project.DataType != ProjectDataType.Image)
             {
                 return BadRequest("The project data type must be set to image in order to upload image files.");
             }
@@ -315,7 +315,7 @@ namespace d_lama_service.Controllers
             // Check if the project exists
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
-            if (project.DataType != "image")
+            if (project.DataType != ProjectDataType.Image)
             {
                 return BadRequest("The project data type must be set to image in order to upload image files.");
             }
@@ -359,7 +359,7 @@ namespace d_lama_service.Controllers
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
-            if (project.DataType != "text")
+            if (project.DataType != ProjectDataType.Text)
             {
                 return BadRequest($"The project {project.Name} with ID {project.Id} is not suitable for text edits.");
             }
@@ -399,7 +399,7 @@ namespace d_lama_service.Controllers
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
-            if (project.DataType != "image")
+            if (project.DataType != ProjectDataType.Image)
             {
                 return BadRequest($"The project {project.Name} with ID {project.Id} is not suitable for image edits.");
             }
@@ -443,7 +443,7 @@ namespace d_lama_service.Controllers
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
-            if (project.DataType == "text")
+            if (project.DataType == ProjectDataType.Text)
             {
                 var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
 
@@ -462,7 +462,7 @@ namespace d_lama_service.Controllers
 
                 return Ok();
             }
-            else if (project.DataType == "image")
+            else if (project.DataType == ProjectDataType.Image)
             {
                 var imageDataPoints = await _unitOfWork.ImageDataPointRepository.FindAsync(e => e.ProjectId == projectId);
 
@@ -499,7 +499,7 @@ namespace d_lama_service.Controllers
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
-            if (project.DataType == "text")
+            if (project.DataType == ProjectDataType.Text)
             {
                 var textDataPoints = await _unitOfWork.TextDataPointRepository
                     .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex >= startIndex && e.DataPointIndex <= endIndex);
@@ -519,7 +519,7 @@ namespace d_lama_service.Controllers
 
                 return Ok();
             }
-            else if (project.DataType == "image")
+            else if (project.DataType == ProjectDataType.Image)
             {
                 var imageDataPoints = await _unitOfWork.ImageDataPointRepository
                     .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex >= startIndex && e.DataPointIndex <= endIndex);

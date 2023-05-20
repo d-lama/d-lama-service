@@ -109,12 +109,12 @@ namespace d_lama_service.Controllers
             Project? project;
             string? projectDirectoryPath;
 
-            if (projectForm.DataType == "image")
+            if (projectForm.DataType == ProjectDataType.Image)
             {
                 var webRootPath = _environment.WebRootPath.ToString();
                 projectDirectoryPath = Path.Combine(webRootPath, "project_files");
                 project = new Project(projectForm.ProjectName, projectForm.Description, projectDirectoryPath);
-            } else if (projectForm.DataType == "text") {
+            } else if (projectForm.DataType == ProjectDataType.Text) {
                 project = new Project(projectForm.ProjectName, projectForm.Description);
             } else
             {
@@ -131,7 +131,7 @@ namespace d_lama_service.Controllers
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
-            if (project.DataType == "image")
+            if (project.DataType == ProjectDataType.Image)
             {
                 await CreateFileDirectory(project);
             }
@@ -191,7 +191,7 @@ namespace d_lama_service.Controllers
         {
             var project = await GetProjectWithOwnerCheckAsync(id);
 
-            if (project.DataType == "image")
+            if (project.DataType == ProjectDataType.Image)
             {
                 Directory.Delete(project.StoragePath, true);
             }

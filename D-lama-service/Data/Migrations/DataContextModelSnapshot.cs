@@ -126,9 +126,8 @@ namespace Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("getutcdate()");
 
-                    b.Property<string>("DataType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("DataType")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .IsRequired()

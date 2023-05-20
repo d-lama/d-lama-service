@@ -38,7 +38,7 @@ namespace Data.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreationDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "getutcdate()"),
                     UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DataType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DataType = table.Column<int>(type: "int", nullable: false),
                     StoragePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OwnerId = table.Column<int>(type: "int", nullable: false)
                 },
