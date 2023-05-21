@@ -110,7 +110,7 @@ namespace d_lama_service.Repositories
         /// <summary>
         /// DataPointRepository access with lazy loading.
         /// </summary>
-        public IDataPointRepository DataPointRespitory
+        public IDataPointRepository DataPointRepository
         {
             get
             {

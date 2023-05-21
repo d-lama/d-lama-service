@@ -10,7 +10,10 @@ namespace d_lama_service.Models.ProjectModels
         
         [Required]
         public string Description { get; set; }
-        
+
+        [Required]
+        public ProjectDataType DataType { get; set; }
+
         [Required]
         public List<LabelChangeModel> Labels { get; set; }
 
@@ -19,6 +22,7 @@ namespace d_lama_service.Models.ProjectModels
         {
             ProjectName = project.Name;
             Description = project.Description;
+            DataType = project.DataType;
             Labels = new List<LabelChangeModel>();
             foreach (var label in project.Labels) 
             {

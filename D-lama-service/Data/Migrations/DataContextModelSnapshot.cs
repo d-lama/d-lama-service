@@ -53,6 +53,8 @@ namespace Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProjectId");
+
                     b.ToTable("DataPoints");
 
                     b.HasDiscriminator<string>("Discriminator").HasValue("DataPoint");
@@ -124,12 +126,12 @@ namespace Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("getutcdate()");
 
+                    b.Property<int>("DataType")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsReady")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -137,6 +139,10 @@ namespace Data.Migrations
 
                     b.Property<int>("OwnerId")
                         .HasColumnType("int");
+
+                    b.Property<string>("StoragePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("datetime2");
@@ -195,8 +201,6 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("ProjectId");
-
                     b.HasDiscriminator().HasValue("ImageDataPoint");
                 });
 
@@ -208,9 +212,18 @@ namespace Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("ProjectId");
-
                     b.HasDiscriminator().HasValue("TextDataPoint");
+                });
+
+            modelBuilder.Entity("Data.ProjectEntities.DataPoint", b =>
+                {
+                    b.HasOne("Data.ProjectEntities.Project", "Project")
+                        .WithMany("DataPoints")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Data.ProjectEntities.Label", b =>
@@ -262,28 +275,6 @@ namespace Data.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("Data.ProjectEntities.ImageDataPoint", b =>
-                {
-                    b.HasOne("Data.ProjectEntities.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("Data.ProjectEntities.TextDataPoint", b =>
-                {
-                    b.HasOne("Data.ProjectEntities.Project", "Project")
-                        .WithMany("TextDataPoints")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-                });
-
             modelBuilder.Entity("Data.ProjectEntities.DataPoint", b =>
                 {
                     b.Navigation("LabeledDataPoints");
@@ -296,9 +287,9 @@ namespace Data.Migrations
 
             modelBuilder.Entity("Data.ProjectEntities.Project", b =>
                 {
-                    b.Navigation("Labels");
+                    b.Navigation("DataPoints");
 
-                    b.Navigation("TextDataPoints");
+                    b.Navigation("Labels");
                 });
 
             modelBuilder.Entity("Data.User", b =>

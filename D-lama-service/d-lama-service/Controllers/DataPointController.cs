@@ -7,8 +7,10 @@ using Data;
 using Data.ProjectEntities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IO.Compression;
 using System.Linq.Expressions;
 using System.Net;
+using System.Text;
 
 namespace d_lama_service.Controllers
 {
@@ -37,16 +39,48 @@ namespace d_lama_service.Controllers
         /// <returns> 200 with a list of data points or 404 if there are no data points at all. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet("{projectId:int}")]
-        public async Task<IActionResult> GetAllTextDataPointsAsync(int projectId)
+        public async Task<IActionResult> GetAllDataPointsAsync(int projectId)
         {
             var project = await GetProjectAsync(projectId);
 
-            var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
-            if (!textDataPoints.Any())
+            if (project.DataType == ProjectDataType.Text)
             {
-                return NotFound("No data points found for this project.");
+                var responseList = new List<ReadTextDataPointModel>();
+                var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
+                if (!textDataPoints.Any())
+                {
+                    return NotFound("No data point found for this project.");
+                }
+
+                foreach (var textDataPoint in textDataPoints)
+                {
+                    var isLableled = await IsDataPointLabeledByUser(project.Id, textDataPoint.DataPointIndex);
+                    responseList.Add(new ReadTextDataPointModel(textDataPoint, isLableled));
+                }
+
+                return Ok(responseList);
             }
-            return Ok(textDataPoints);
+            else if (project.DataType == ProjectDataType.Image)
+            {
+                var responseList = new List<ReadImageDataPointModel>();
+                var imageDataPoints = await _unitOfWork.ImageDataPointRepository.FindAsync(e => e.ProjectId == projectId);
+                if (!imageDataPoints.Any())
+                {
+                    return NotFound("No data point found for this project.");
+                }
+                
+                foreach (var imageDataPoint in imageDataPoints)
+                {
+                    var isLableled = await IsDataPointLabeledByUser(project.Id, imageDataPoint.DataPointIndex);
+                    responseList.Add(new ReadImageDataPointModel(imageDataPoint, isLableled));
+                }
+
+                return Ok(responseList);
+            }
+            else
+            {
+                return NotFound("No data point found for this project.");
+            }
         }
 
         /// <summary>
@@ -55,14 +89,13 @@ namespace d_lama_service.Controllers
         /// <param name="projectId"> The ID of the project. </param>
         /// <returns> The number of text data points. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
-        [HttpGet("{projectId:int}/GetNumberOfTextDataPoints")]
-        public async Task<IActionResult> GetNumberOfTextDataPointsAsync(int projectId)
+        [HttpGet("{projectId:int}/GetNumberOfDataPoints")]
+        public async Task<IActionResult> GetNumberOfDataPointsAsync(int projectId)
         {
             var project = await GetProjectAsync(projectId);
 
-            // TODO: maybe define count in repository and not get whole list here
-            var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
-            return Ok(textDataPoints.Count());
+            var dataPoints = await _unitOfWork.DataPointRepository.FindAsync(e => e.ProjectId == projectId);
+            return Ok(dataPoints.Count());
         }
 
         /// <summary>
@@ -70,43 +103,99 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <param name="projectId"> The ID of the project. </param>
         /// <param name="dataPointIndex"> The index of the data point. </param>
-        /// <returns> 200 with a list of data points or 404 if there are no data points at all. </returns>
+        /// <returns> 200 with the data point or 404 if not match found. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet("{projectId:int}/{dataPointIndex:int}")]
-        public async Task<IActionResult> GetTextDataPointAsync(int projectId, int dataPointIndex)
+        public async Task<IActionResult> GetDataPointAsync(int projectId, int dataPointIndex)
         {
             var project = await GetProjectAsync(projectId);
 
-            var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
-            if (!textDataPoints.Any())
+            if (project.DataType == ProjectDataType.Text)
+            {
+                var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
+                if (!textDataPoints.Any())
+                {
+                    return NotFound("No data point found for this project and index.");
+                }
+                var textDataPoint = textDataPoints.First();
+                var isLableled = await IsDataPointLabeledByUser(project.Id, textDataPoint.DataPointIndex);
+                return Ok(new ReadTextDataPointModel(textDataPoint, isLableled));
+            }
+            else if (project.DataType == ProjectDataType.Image)
+            {
+                var imageDataPoints = await _unitOfWork.ImageDataPointRepository.FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
+                if (!imageDataPoints.Any())
+                {
+                    return NotFound("No data point found for this project and index.");
+                }
+                var imagePath = imageDataPoints.First().Path;
+
+                byte[] imageBytes = await System.IO.File.ReadAllBytesAsync(imagePath);
+                string contentType = GetContentType(imagePath);
+
+                return File(imageBytes, contentType);
+            }
+            else
             {
                 return NotFound("No data point found for this project and index.");
-            }
-            var textDataPoint = textDataPoints.First();
-            return Ok(new ReadTextDataPointModel(textDataPoint));
+            }            
         }
 
         /// <summary>
         /// Retrieves a range of data point related to a project.
         /// </summary>
         /// <param name="projectId"> The ID of the project. </param>
-        /// <param name="startIndex"> The start of index range (inclusive). </param>
-        /// <param name="endIndex"> The end of index range (inclusive). </param>
-        /// <returns> A da</returns>
+        /// <param name="startIndex"> The start index of DataPoint range (inclusive). </param>
+        /// <param name="endIndex"> The end index of DataPoint range (inclusive). </param>
+        /// <returns> The data points. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [HttpGet("{projectId:int}/{startIndex:int}/{endIndex:int}")]
-        public async Task<IActionResult> GetTextDataPointRangeAsync(int projectId, int startIndex, int endIndex)
+        public async Task<IActionResult> GetDataPointRangeAsync(int projectId, int startIndex, int endIndex)
         {
             var project = await GetProjectAsync(projectId);
 
-            var textDataPoints = await _unitOfWork.TextDataPointRepository
-                .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex >= startIndex && e.DataPointIndex <= endIndex);
-
-            if (!textDataPoints.Any())
+            if (project.DataType == ProjectDataType.Text)
             {
-                return NotFound("No data points found for this project and index range.");
+                var responseList = new List<ReadTextDataPointModel>();
+                var textDataPoints = await _unitOfWork.TextDataPointRepository
+                    .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex >= startIndex && e.DataPointIndex <= endIndex);
+
+                if (!textDataPoints.Any())
+                {
+                    return NotFound("No data point found for this project.");
+                }
+
+                foreach (var textDataPoint in textDataPoints)
+                {
+                    var isLableled = await IsDataPointLabeledByUser(project.Id, textDataPoint.DataPointIndex);
+                    responseList.Add(new ReadTextDataPointModel(textDataPoint, isLableled));
+                }
+
+                return Ok(responseList);
             }
-            return Ok(textDataPoints);
+            else if (project.DataType == ProjectDataType.Image)
+            {
+                var responseList = new List<ReadImageDataPointModel>();
+                var imageDataPoints = await _unitOfWork.ImageDataPointRepository
+                    .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex >= startIndex && e.DataPointIndex <= endIndex);
+
+                if (!imageDataPoints.Any())
+                {
+                    return NotFound("No data points found for this project.");
+                }
+
+                foreach (var imageDataPoint in imageDataPoints)
+                {
+                    var isLableled = await IsDataPointLabeledByUser(project.Id, imageDataPoint.DataPointIndex);
+                    responseList.Add(new ReadImageDataPointModel(imageDataPoint, isLableled));
+                }
+
+                return Ok(responseList);
+            }
+            else
+            {
+                return NotFound("No data point found for this project.");
+            }
         }
 
         /// <summary>
@@ -129,14 +218,14 @@ namespace d_lama_service.Controllers
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
-            var uri = nameof(GetTextDataPointAsync) + "/" + dataPoint.ProjectId + "/" + dataPoint.DataPointIndex;
+            var uri = nameof(GetDataPointAsync) + "/" + dataPoint.ProjectId + "/" + dataPoint.DataPointIndex;
             return Created(uri, dataPoint.Content);
         }
 
         /// <summary>
         /// Uploads a textual dataset and assigns the content to a given project.
         /// </summary>
-        /// <param name="id"> The project ID. </param>
+        /// <param name="projectId"> The project ID. </param>
         /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
@@ -146,20 +235,19 @@ namespace d_lama_service.Controllers
             // Check if the project exists
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
+            if (project.DataType != ProjectDataType.Text)
+            {
+                return BadRequest("The project data type must be set to text in order to upload text content.");
+            }
+
             // Check if a uploadedFile was uploaded
             if (uploadedFile == null || uploadedFile.Length == 0)
             {
                 return BadRequest("No file was uploaded.");
             }
 
-            // TODO: check malware with library - not yet - first discuss which tool to use
-
-            // check if uploadedFile in supported format
-            DataSetReader dataSetReader = new DataSetReader();
-
-            // TODO: validate data format, header?
-
             // read data into database
+            DataSetReader dataSetReader = new DataSetReader();
             ICollection<string> textDataPoints = await dataSetReader.ReadFileAsync(uploadedFile);
 
             var index = await GetNextTextDataPointIndexAsync(project);
@@ -169,6 +257,87 @@ namespace d_lama_service.Controllers
                 index++;
             }
 
+            _unitOfWork.ProjectRepository.Update(project);
+            await _unitOfWork.SaveAsync();
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Uploads a single image file and assigns it to a given project.
+        /// </summary>
+        /// <param name="projectId"> The project ID. </param>
+        /// <param name="uploadedFile"> The image file. </param>
+        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [AdminAuthorize]
+        [HttpPost("{projectId:int}/UploadSingleImageDataPoint")]
+        public async Task<IActionResult> UploadSingleImageDataPointAsync(int projectId, IFormFile uploadedFile)
+        {
+            // Check if the project exists
+            var project = await GetProjectWithOwnerCheckAsync(projectId);
+
+            if (project.DataType != ProjectDataType.Image)
+            {
+                return BadRequest("The project data type must be set to image in order to upload image files.");
+            }
+
+            // Check if a uploadedFile was uploaded
+            if (uploadedFile == null || uploadedFile.Length == 0)
+            {
+                return BadRequest("No file was uploaded.");
+            }
+
+            // read data into database
+            DataSetReader dataSetReader = new DataSetReader();
+            int index = await GetNextImageDataPointIndexAsync(project);
+            ICollection<string> imagePaths = await dataSetReader.ReadFileAsync(uploadedFile, index, project.StoragePath);
+            project.DataPoints.Add(CreateImageDataPoint(imagePaths.First(), index));
+
+            // save the changes to the database
+            _unitOfWork.ProjectRepository.Update(project);
+            await _unitOfWork.SaveAsync();
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Uploads an image dataset and assigns the content to a given project.
+        /// </summary>
+        /// <param name="projectId"> The project ID. </param>
+        /// <param name="uploadedFile"> The compressed file containing the images. </param>
+        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [AdminAuthorize]
+        [HttpPost("{projectId:int}/UploadImageDataPoints")]
+        public async Task<IActionResult> UploadImageDataPointsAsync(int projectId, IFormFile uploadedFile)
+        {
+            // Check if the project exists
+            var project = await GetProjectWithOwnerCheckAsync(projectId);
+
+            if (project.DataType != ProjectDataType.Image)
+            {
+                return BadRequest("The project data type must be set to image in order to upload image files.");
+            }
+
+            // Check if a uploadedFile was uploaded
+            if (uploadedFile == null || uploadedFile.Length == 0)
+            {
+                return BadRequest("No file was uploaded.");
+            }
+
+            // read data into database
+            DataSetReader dataSetReader = new DataSetReader();
+            int index = await GetNextImageDataPointIndexAsync(project);
+            ICollection<string> imagePaths = await dataSetReader.ReadFileAsync(uploadedFile, index, project.StoragePath);
+            foreach (var imagePath in imagePaths)
+            {
+                // create the image data point and add it to the project
+                project.DataPoints.Add(CreateImageDataPoint(imagePath, index));
+                index++;
+            }
+
+            // save the changes to the database
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
 
@@ -190,6 +359,11 @@ namespace d_lama_service.Controllers
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
+            if (project.DataType != ProjectDataType.Text)
+            {
+                return BadRequest($"The project {project.Name} with ID {project.Id} is not suitable for text edits.");
+            }
+
             var textDataPoints = await _unitOfWork.TextDataPointRepository
                .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
 
@@ -201,6 +375,8 @@ namespace d_lama_service.Controllers
             var textDataPoint = textDataPoints.First();
 
             textDataPoint.Content = dataPointForm.Content ?? textDataPoint.Content;
+            textDataPoint.UpdateDate = DateTime.UtcNow;
+            textDataPoint.Version++;
 
             _unitOfWork.TextDataPointRepository.Update(textDataPoint);
             await _unitOfWork.SaveAsync();
@@ -209,69 +385,161 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
-        /// Deletes all textual datapoints of a projact with a given project ID.
+        /// Edits an image data point with a given project ID and data point index.
         /// </summary>
         /// <param name="projectId"> The project ID. </param>
-        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        /// <param name="dataPointIndex"> The data point index. </param>
+        /// <param name="uploadedFile"> The updated file that will replace the currently stored one. </param>
+        /// <returns> Statuscode 200 on success, else Statuscode 400 or 404. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpDelete("{projectId:int}/DeleteTextDataPoints")]
-        public async Task<IActionResult> DeleteAllTextDataPointsAsync(int projectId)
+        [HttpPatch("{projectId:int}/EditImageDataPoint/{dataPointIndex:int}")]
+        public async Task<IActionResult> EditImageDataPointAsync(int projectId, int dataPointIndex, IFormFile uploadedFile)
         {
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
-            var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
-
-            if (!textDataPoints.Any())
+            if (project.DataType != ProjectDataType.Image)
             {
-                return NotFound("No data points found for this project.");
+                return BadRequest($"The project {project.Name} with ID {project.Id} is not suitable for image edits.");
             }
 
-            foreach (var textDataPoint in textDataPoints)
+            var imageDataPoints = await _unitOfWork.ImageDataPointRepository
+               .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex == dataPointIndex);
+
+            if (!imageDataPoints.Any())
             {
-                _unitOfWork.TextDataPointRepository.Delete(textDataPoint);
+                return NotFound("Data point not found.");
             }
-            
-            _unitOfWork.ProjectRepository.Update(project);
+
+            var imageDataPoint = imageDataPoints.First();
+
+            // replace image in file system
+            System.IO.File.Delete(imageDataPoint.Path);
+            DataSetReader dataSetReader = new DataSetReader();
+            ICollection<string> imagePaths = await dataSetReader.ReadFileAsync(uploadedFile, imageDataPoint.DataPointIndex, project.StoragePath);
+
+            imageDataPoint.Path = imagePaths.First();
+            imageDataPoint.UpdateDate = DateTime.UtcNow;
+            imageDataPoint.Version++;
+
+            _unitOfWork.ImageDataPointRepository.Update(imageDataPoint);
             await _unitOfWork.SaveAsync();
 
             return Ok();
         }
 
         /// <summary>
-        /// Deletes all datapoints of a project with a given project ID.
+        /// Deletes all data points of a projact with a given project ID.
         /// </summary>
         /// <param name="projectId"> The project ID. </param>
-        /// <param name="startIndex"> The start of index range (inclusive). </param>
-        /// <param name="endIndex"> The end of index range (inclusive). </param>
-        /// <returns> Statuscode 200 on success, else Statuscode 400. </returns>
+        /// <returns> Statuscode 200 on success, else Statuscode 404. </returns>
         [TypeFilter(typeof(RESTExceptionFilter))]
         [AdminAuthorize]
-        [HttpDelete("{projectId:int}/DeleteTextDataPoints/{startIndex:int}/{endIndex:int}")]
+        [HttpDelete]
+        [Route("{projectId:int}/DeleteDataPoints")]
+        public async Task<IActionResult> DeleteAllDataPointsAsync(int projectId)
+        {
+            // Check if the project exists and if user is owner
+            var project = await GetProjectWithOwnerCheckAsync(projectId);
+
+            if (project.DataType == ProjectDataType.Text)
+            {
+                var textDataPoints = await _unitOfWork.TextDataPointRepository.FindAsync(e => e.ProjectId == projectId);
+
+                if (!textDataPoints.Any())
+                {
+                    return NotFound("No data point found for this project.");
+                }
+
+                foreach (var textDataPoint in textDataPoints)
+                {
+                    _unitOfWork.TextDataPointRepository.Delete(textDataPoint);
+                }
+
+                _unitOfWork.ProjectRepository.Update(project);
+                await _unitOfWork.SaveAsync();
+
+                return Ok();
+            }
+            else if (project.DataType == ProjectDataType.Image)
+            {
+                var imageDataPoints = await _unitOfWork.ImageDataPointRepository.FindAsync(e => e.ProjectId == projectId);
+
+                if (!imageDataPoints.Any())
+                {
+                    return NotFound("No data points found for this project.");
+                }
+
+                var response = DeleteImageDataPoints(imageDataPoints);
+
+                _unitOfWork.ProjectRepository.Update(project);
+                await _unitOfWork.SaveAsync();
+
+                return Ok(response);
+            }
+            else
+            {
+                return NotFound("No data point found for this project.");
+            }
+        }
+
+        /// <summary>
+        /// Deletes a range of data points of a project with a given project ID.
+        /// </summary>
+        /// <param name="projectId"> The project ID. </param>
+        /// <param name="startIndex"> The start index of range (inclusive). </param>
+        /// <param name="endIndex"> The end index of range (inclusive). </param>
+        /// <returns> Statuscode 200 on success, else Statuscode 404. </returns>
+        [TypeFilter(typeof(RESTExceptionFilter))]
+        [AdminAuthorize]
+        [HttpDelete("{projectId:int}/DeleteDataPoints/{startIndex:int}/{endIndex:int}")]
         public async Task<IActionResult> DeleteTextDataPointRangeAsync(int projectId, int startIndex, int endIndex)
         {
             // Check if the project exists and if user is owner
             var project = await GetProjectWithOwnerCheckAsync(projectId);
 
-            var textDataPoints = await _unitOfWork.TextDataPointRepository
-                .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex >= startIndex && e.DataPointIndex <= endIndex);
-
-            if (!textDataPoints.Any())
+            if (project.DataType == ProjectDataType.Text)
             {
-                return NotFound("No data points found for this project and index range.");
-            }
+                var textDataPoints = await _unitOfWork.TextDataPointRepository
+                    .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex >= startIndex && e.DataPointIndex <= endIndex);
 
-            foreach (var textDataPoint in textDataPoints)
+                if (!textDataPoints.Any())
+                {
+                    return NotFound("No data point found for this project.");
+                }
+
+                foreach (var textDataPoint in textDataPoints)
+                {
+                    _unitOfWork.TextDataPointRepository.Delete(textDataPoint);
+                }
+
+                _unitOfWork.ProjectRepository.Update(project);
+                await _unitOfWork.SaveAsync();
+
+                return Ok();
+            }
+            else if (project.DataType == ProjectDataType.Image)
             {
-                _unitOfWork.TextDataPointRepository.Delete(textDataPoint);
+                var imageDataPoints = await _unitOfWork.ImageDataPointRepository
+                    .FindAsync(e => e.ProjectId == projectId && e.DataPointIndex >= startIndex && e.DataPointIndex <= endIndex);
+
+                if (!imageDataPoints.Any())
+                {
+                    return NotFound("No data points found for this project.");
+                }
+
+                var response = DeleteImageDataPoints(imageDataPoints);
+
+                _unitOfWork.ProjectRepository.Update(project);
+                await _unitOfWork.SaveAsync();
+
+                return Ok(response);
             }
-
-            // TODO: maybe reindex TextDataPoints
-            _unitOfWork.ProjectRepository.Update(project);
-            await _unitOfWork.SaveAsync();
-
-            return Ok();
+            else
+            {
+                return NotFound("No data point found for this project.");
+            }
         }
 
         /// <summary>
@@ -400,6 +668,18 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
+        /// Returns the next DataPointIndex for an ImageDataPoint. 
+        /// </summary>
+        /// <param name="project"> The project. </param>
+        /// <returns> Next index. </returns>
+        private async Task<int> GetNextImageDataPointIndexAsync(Project project)
+        {
+            var presentDataPoints = await _unitOfWork.ImageDataPointRepository.FindAsync(e => e.ProjectId == project.Id);
+            int index = presentDataPoints.OrderByDescending(dp => dp.DataPointIndex).FirstOrDefault()?.DataPointIndex + 1 ?? 0;
+            return index;
+        }
+
+        /// <summary>
         /// Creates a textual data point with given content and index. 
         /// </summary>
         /// <param name="content"> Data point content. </param>
@@ -410,6 +690,80 @@ namespace d_lama_service.Controllers
             var dataPoint = new TextDataPoint(content, index);
             _unitOfWork.TextDataPointRepository.Update(dataPoint);
             return dataPoint;
+        }
+
+        /// <summary>
+        /// Creates an image data point with given path and index. 
+        /// </summary>
+        /// <param name="path"> Data point path. </param>
+        /// <param name="index"> Data point index. </param>
+        /// <returns> The created image data point. </returns>
+        private ImageDataPoint CreateImageDataPoint(string path, int index)
+        {
+            var dataPoint = new ImageDataPoint(path, index);
+            _unitOfWork.ImageDataPointRepository.Update(dataPoint);
+            return dataPoint;
+        }
+
+        private string DeleteImageDataPoint(ImageDataPoint imageDataPoint)
+        {
+            string responseLogLine = "";
+            try
+            {
+                System.IO.File.Delete(imageDataPoint.Path);
+            }
+            catch (FileNotFoundException e)
+            {
+                responseLogLine = ($"The file was not found: {e.FileName}");
+            }
+            catch (DirectoryNotFoundException)
+            {
+                responseLogLine = ($"The project directory was not found: project_{imageDataPoint.ProjectId}");
+            }
+            catch (IOException)
+            {
+                responseLogLine = ($"The file could not be deleted because it is currently in use: {Path.GetFileName(imageDataPoint.Path)}");
+            }
+            finally
+            {
+                _unitOfWork.ImageDataPointRepository.Delete(imageDataPoint);
+            }
+            return responseLogLine;
+        }
+
+        private string DeleteImageDataPoints(IEnumerable<ImageDataPoint> imageDataPoints)
+        {
+            var responseLog = new StringBuilder();
+
+            foreach (var imageDataPoint in imageDataPoints)
+            {
+                var responseLogLine = DeleteImageDataPoint(imageDataPoint);
+                if (!string.IsNullOrEmpty(responseLogLine))
+                {
+                    responseLog.AppendLine(responseLogLine);
+                }
+            }
+            return responseLog.ToString();
+        }
+
+        /// <summary>
+        /// Gets the content type of an image file at the given path.
+        /// </summary>
+        /// <param name="imagePath"> Data point path. </param>
+        /// <returns> The content type. </returns>
+        private string GetContentType(string imagePath)
+        {
+            string extension = Path.GetExtension(imagePath);
+            switch (extension.ToLowerInvariant())
+            {
+                case ".jpg":
+                case ".jpeg":
+                    return "image/jpeg";
+                case ".png":
+                    return "image/png";
+                default:
+                    return "application/octet-stream";
+            }
         }
 
         /// <summary>
@@ -428,12 +782,22 @@ namespace d_lama_service.Controllers
             return project;
         }
 
-        private async Task<DataPoint> GetDataPointFromProjectAsync(int projectId, int dataPointId) 
+        private async Task<bool> IsDataPointLabeledByUser(int projectId, int dataPointIndex)
         {
-            DataPoint? dataPoint = (await _unitOfWork.DataPointRespitory.FindAsync(e => e.DataPointIndex == dataPointId && e.ProjectId == projectId)).FirstOrDefault();
+            var labeledDataPoint = await GetLabeledDataPointOfUserAsync(projectId, dataPointIndex);
+            if (labeledDataPoint != null)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private async Task<DataPoint> GetDataPointFromProjectAsync(int projectId, int dataPointIndex) 
+        {
+            DataPoint? dataPoint = (await _unitOfWork.DataPointRepository.FindAsync(e => e.DataPointIndex == dataPointIndex && e.ProjectId == projectId)).FirstOrDefault();
             if (dataPoint == null)
             {
-                throw new RESTException(HttpStatusCode.NotFound, $"DataPoint with id {dataPointId} does not exist.");
+                throw new RESTException(HttpStatusCode.NotFound, $"DataPoint with id {dataPointIndex} does not exist.");
             }
             return dataPoint!;
         }
