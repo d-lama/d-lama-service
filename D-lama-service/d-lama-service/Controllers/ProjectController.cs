@@ -9,6 +9,7 @@ using d_lama_service.Middleware;
 using System.Net;
 using System.Linq.Expressions;
 using d_lama_service.Models.UserModels;
+using d_lama_service.Services;
 
 namespace d_lama_service.Controllers
 {
@@ -21,6 +22,7 @@ namespace d_lama_service.Controllers
     public class ProjectController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ISharedService _sharedService;
         private readonly IWebHostEnvironment _environment;
 
         /// <summary>
@@ -28,9 +30,10 @@ namespace d_lama_service.Controllers
         /// </summary>
         /// <param name="unitOfWork"> The unitOfWork for handling db access. </param>
         /// <param name="environment"> The web hosting environment. </param>
-        public ProjectController(IUnitOfWork unitOfWork, IWebHostEnvironment environment) 
+        public ProjectController(IUnitOfWork unitOfWork, ISharedService sharedService, IWebHostEnvironment environment) 
         {
             _unitOfWork = unitOfWork;
+            _sharedService = sharedService;
             _environment = environment;
         }
 
@@ -42,7 +45,7 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> GetAll()
         {
             var projectList = new List<DetailedProjectModel>();
-            var user = await GetAuthenticatedUserAsync();
+            var user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
             var projects = await _unitOfWork.ProjectRepository.GetAllAsync();
             foreach (var project in projects) 
             {
@@ -63,7 +66,7 @@ namespace d_lama_service.Controllers
         [Route("My")]
         public async Task<IActionResult> GetMyProjects()
         {
-            User user = await GetAuthenticatedUserAsync();
+            User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
             return Ok(await _unitOfWork.ProjectRepository.FindAsync(e => e.OwnerId == user.Id));
         }
 
@@ -75,7 +78,7 @@ namespace d_lama_service.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get(int id)
         {
-            var user = await GetAuthenticatedUserAsync();
+            var user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
             var project = await _unitOfWork.ProjectRepository.GetDetailsAsync(id, e => e.Labels, e => e.DataPoints);
             
             if (project == null)
@@ -98,7 +101,7 @@ namespace d_lama_service.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ProjectModel projectForm)
         {
-            User user = await GetAuthenticatedUserAsync();
+            User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
 
             var nameExists = (await _unitOfWork.ProjectRepository.FindAsync(e => e.Name == projectForm.ProjectName)).Any();
             if (nameExists)
@@ -151,7 +154,7 @@ namespace d_lama_service.Controllers
         [HttpPatch("{id:int}")]
         public async Task<IActionResult> Edit(int id, [FromBody] EditProjectModel projectForm)
         {
-            var project = await GetProjectWithOwnerCheckAsync(id, e => e.Labels);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext, e => e.Labels);
 
             var labeSetChanges = projectForm.LabeSetChanges;
             if (labeSetChanges != null)
@@ -189,7 +192,7 @@ namespace d_lama_service.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var project = await GetProjectWithOwnerCheckAsync(id);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext);
 
             if (project.DataType == ProjectDataType.Image)
             {
@@ -214,7 +217,7 @@ namespace d_lama_service.Controllers
         [HttpPost("{id:int}/Labels/")]
         public async Task<IActionResult> AddLabels(int id, [FromBody] LabelSetModel[] newLabels) 
         {
-            var project = await GetProjectWithOwnerCheckAsync(id, e => e.Labels);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext, e => e.Labels);
 
             foreach (var label in newLabels) 
             {
@@ -243,7 +246,7 @@ namespace d_lama_service.Controllers
         [HttpDelete("{id:int}/Labels/{labelId:int}")]
         public async Task<IActionResult> RemoveLabel(int id, int labelId)
         {
-            await GetProjectWithOwnerCheckAsync(id);
+            await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext);
 
             var label = await _unitOfWork.LabelRepository.GetAsync(labelId);
             if (label == null || label.ProjectId != id) 
@@ -273,7 +276,7 @@ namespace d_lama_service.Controllers
         [HttpGet("{id:int}/Ranking")]
         public async Task<IActionResult> GetUserRanking(int id) 
         {
-            var project = await GetProjectWithOwnerCheckAsync(id, e => e.DataPoints);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext, e => e.DataPoints);
             var dataPointIds = project.DataPoints.Select(e => e.Id);
             if (dataPointIds == null || !dataPointIds.Any()) 
             {
@@ -294,38 +297,6 @@ namespace d_lama_service.Controllers
         }
 
         /// <summary>
-        /// Gets a project with checking if the user is owner of the project. 
-        /// </summary>
-        /// <param name="projectId"> The id of the project. </param>
-        /// <returns> The found project. </returns>
-        /// <exception cref="RESTException"> Throws Rest Excetption if project is not found or the current user is not the owner. </exception>
-        private async Task<Project> GetProjectWithOwnerCheckAsync(int projectId, params Expression<Func<Project, object>>[] includes) 
-        {
-            Project? project;
-            if (includes.Any())
-            {
-                project = await _unitOfWork.ProjectRepository.GetDetailsAsync(projectId, includes);
-            }
-            else 
-            {
-                project = await _unitOfWork.ProjectRepository.GetAsync(projectId);
-            }
-
-            if (project == null)
-            {
-                throw new RESTException(HttpStatusCode.NotFound, $"Project with id {projectId} does not exist.");
-            }
-
-            var user = await GetAuthenticatedUserAsync();
-            if (project.Owner != user)
-            {
-                throw new RESTException(HttpStatusCode.Unauthorized, $"Only the owner of the project can modify it.");
-            }
-
-            return project;
-        }
-
-        /// <summary>
         /// Creates a project directory in the file storage path. 
         /// </summary>
         /// <param name="project"> The project. </param>
@@ -337,12 +308,6 @@ namespace d_lama_service.Controllers
 
             _unitOfWork.ProjectRepository.Update(project);
             await _unitOfWork.SaveAsync();
-        }
-
-        private async Task<User> GetAuthenticatedUserAsync()
-        {
-            var userId = int.Parse(HttpContext.User.FindFirst(Tokenizer.UserIdClaim)?.Value!); // on error throw
-            return (await _unitOfWork.UserRepository.GetAsync(userId))!;
         }
     }
 }

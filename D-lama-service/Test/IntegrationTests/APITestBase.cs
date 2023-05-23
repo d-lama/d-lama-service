@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Newtonsoft.Json;
 using d_lama_service.Models.UserModels;
 using Data.ProjectEntities;
+using d_lama_service.Services;
 
 namespace Test.IntegrationTests
 {
@@ -98,7 +99,7 @@ namespace Test.IntegrationTests
             foreach (var testUser in TestUsers)
             {
                 var salt = PasswordHasher.GenerateSalt();
-                var hash = PasswordHasher.ComputeHash(testUser.Password, salt, pepper, UserController.Iteration);
+                var hash = PasswordHasher.ComputeHash(testUser.Password, salt, pepper, UserService.Iteration);
                 var user = new User(testUser.Email, "my first name", "my last name", hash, salt, DateTime.Today.AddYears(-20), testUser.IsAdmin);
                 await Context.AddAsync(user);
                 await Context.SaveChangesAsync();

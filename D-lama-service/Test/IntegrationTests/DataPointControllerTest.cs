@@ -860,7 +860,10 @@ namespace Test.IntegrationTests
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
+            var token = await GetAuthToken(new LoginModel { Email = User.Email, Password = User.Password });
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
 
             // Act
             var response = await Client.SendAsync(request);

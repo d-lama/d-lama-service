@@ -5,6 +5,7 @@ using d_lama_service.Models.DataProcessing;
 using d_lama_service.Models.ProjectModels;
 using d_lama_service.Models.UserModels;
 using d_lama_service.Repositories;
+using d_lama_service.Services;
 using Data;
 using Data.ProjectEntities;
 using Microsoft.AspNetCore.Authorization;
@@ -26,13 +27,15 @@ namespace d_lama_service.Controllers
     public class DataPointController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ISharedService _sharedService;
 
         /// <summary>
         /// Constructor of the DataPointController.
         /// </summary>
-        public DataPointController(IUnitOfWork unitOfWork)
+        public DataPointController(IUnitOfWork unitOfWork, ISharedService sharedService)
         {
             _unitOfWork = unitOfWork;
+            _sharedService = sharedService;
         }
 
         /// <summary>
@@ -213,7 +216,7 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> CreateSingleTextDataPointAsync(int projectId, [FromBody] TextDataPointModel dataPointForm)
         {
             // Check if the project exists
-            var project = await GetProjectWithOwnerCheckAsync(projectId);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(projectId, HttpContext);
 
             var index = await GetNextTextDataPointIndexAsync(project);
             var dataPoint = new TextDataPoint(dataPointForm.Content, index);
@@ -236,7 +239,7 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> UploadTextDataPointsAsync(int projectId, IFormFile uploadedFile)
         {
             // Check if the project exists
-            var project = await GetProjectWithOwnerCheckAsync(projectId);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(projectId, HttpContext);
 
             if (project.DataType != ProjectDataType.Text)
             {
@@ -278,7 +281,7 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> UploadSingleImageDataPointAsync(int projectId, IFormFile uploadedFile)
         {
             // Check if the project exists
-            var project = await GetProjectWithOwnerCheckAsync(projectId);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(projectId, HttpContext);
 
             if (project.DataType != ProjectDataType.Image)
             {
@@ -316,7 +319,7 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> UploadImageDataPointsAsync(int projectId, IFormFile uploadedFile)
         {
             // Check if the project exists
-            var project = await GetProjectWithOwnerCheckAsync(projectId);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(projectId, HttpContext);
 
             if (project.DataType != ProjectDataType.Image)
             {
@@ -360,7 +363,7 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> EditTextDataPointAsync(int projectId, int dataPointIndex, [FromBody] EditTextDataPointModel dataPointForm)
         {
             // Check if the project exists and if user is owner
-            var project = await GetProjectWithOwnerCheckAsync(projectId);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(projectId, HttpContext);
 
             if (project.DataType != ProjectDataType.Text)
             {
@@ -400,7 +403,7 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> EditImageDataPointAsync(int projectId, int dataPointIndex, IFormFile uploadedFile)
         {
             // Check if the project exists and if user is owner
-            var project = await GetProjectWithOwnerCheckAsync(projectId);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(projectId, HttpContext);
 
             if (project.DataType != ProjectDataType.Image)
             {
@@ -444,7 +447,7 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> DeleteAllDataPointsAsync(int projectId)
         {
             // Check if the project exists and if user is owner
-            var project = await GetProjectWithOwnerCheckAsync(projectId);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(projectId, HttpContext);
 
             if (project.DataType == ProjectDataType.Text)
             {
@@ -500,7 +503,7 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> DeleteTextDataPointRangeAsync(int projectId, int startIndex, int endIndex)
         {
             // Check if the project exists and if user is owner
-            var project = await GetProjectWithOwnerCheckAsync(projectId);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(projectId, HttpContext);
 
             if (project.DataType == ProjectDataType.Text)
             {
@@ -562,7 +565,7 @@ namespace d_lama_service.Controllers
                 return BadRequest("Data point is already labeled by you.");
             }
 
-            var user = await GetAuthenticatedUserAsync();
+            var user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
             await GetProjectAsync(projectId); // check for existance
             var label = await GetLabelAsync(labelId);
             var dataPoint = await GetDataPointFromProjectAsync(projectId, dataPointIndex);
@@ -609,7 +612,7 @@ namespace d_lama_service.Controllers
         [HttpGet("{projectId:int}/GetLabeledData")]
         public async Task<IActionResult> GetLabeledDataForProject(int projectId) 
         {
-            var project = await GetProjectWithOwnerCheckAsync(projectId, e => e.DataPoints, e => e.Labels);
+            var project = await _sharedService.GetProjectWithOwnerCheckAsync(projectId, HttpContext, e => e.DataPoints, e => e.Labels);
             var labeledDataModelDic = new Dictionary<int,LabeledDataPointModel>();  
             var userIds = new HashSet<int>();
             foreach (var dataPoint in project.DataPoints) 
@@ -644,7 +647,7 @@ namespace d_lama_service.Controllers
         [HttpGet("{projectId:int}/GetLabeledData/{dataPointIndex:int}")]
         public async Task<IActionResult> GetLabeledDataPointForProject(int projectId, int dataPointIndex) 
         {
-            await GetProjectWithOwnerCheckAsync(projectId); // for owner check
+            await _sharedService.GetProjectWithOwnerCheckAsync(projectId, HttpContext); // for owner check
             var dataPointId = (await GetDataPointFromProjectAsync(projectId, dataPointIndex)).Id;
             var dataPointStats = await _unitOfWork.LabeledDataPointRepository.GetLabeledDataPointStatisticAsync(dataPointId);
             return Ok(new LabeledDataPointModel(dataPointStats));
@@ -658,7 +661,7 @@ namespace d_lama_service.Controllers
         /// <returns> The LabeledDataPoint if found or null if not found. </returns>
         private async Task<LabeledDataPoint?> GetLabeledDataPointOfUserAsync(int projectId, int dataPointIndex) 
         {
-            var user = await GetAuthenticatedUserAsync();
+            var user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
             await GetProjectAsync(projectId); // check for existance
             var dataPointId = (await GetDataPointFromProjectAsync(projectId, dataPointIndex)).Id;
             try
@@ -827,33 +830,6 @@ namespace d_lama_service.Controllers
                 throw new RESTException(HttpStatusCode.NotFound, $"Label with id {labelId} does not exist.");
             }
             return label;
-        }
-
-        // TODO: refactor, find solution for GetProjectWithOwnerCheckAsync that is a duplicate of the one in ProjectController
-        /// <summary>
-        /// Gets a project with checking if the user is owner of the project. 
-        /// </summary>
-        /// <param name="projectId"> The id of the project. </param>
-        /// <param name="includes"> The other tables to load (join). </param>
-        /// <returns> The found project with its dependencies. </returns>
-        /// <exception cref="RESTException"> Throws Rest Excetption if project is not found or the current user is not the owner. </exception>
-        private async Task<Project> GetProjectWithOwnerCheckAsync(int projectId, params Expression<Func<Project, object>>[] includes)
-        {
-            Project project = await GetProjectAsync(projectId, includes);
-
-            var user = await GetAuthenticatedUserAsync();
-            if (project.Owner != user)
-            {
-                throw new RESTException(HttpStatusCode.Unauthorized, $"Only the owner of the project can modify it.");
-            }
-
-            return project;
-        }
-
-        private async Task<User> GetAuthenticatedUserAsync()
-        {
-            var userId = int.Parse(HttpContext.User.FindFirst(Tokenizer.UserIdClaim)?.Value!); // on error throw
-            return (await _unitOfWork.UserRepository.GetAsync(userId))!;
         }
     }
 }

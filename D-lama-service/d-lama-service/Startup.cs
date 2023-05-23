@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using d_lama_service.Services;
 
 namespace d_lama_service
 {
@@ -67,7 +68,10 @@ namespace d_lama_service
 
             });
 
-            services.AddTransient<IUnitOfWork, UnitOfWork>(); // DI
+            // DI
+            services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddTransient<ISharedService, SharedService>();
+            services.AddTransient<IUserService, UserService>();
 
             var connectionIdentifier = "prd";
             if (_environment.IsDevelopment())
