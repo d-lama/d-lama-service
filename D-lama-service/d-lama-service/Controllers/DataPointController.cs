@@ -1,12 +1,15 @@
 ﻿using d_lama_service.Middleware;
 using d_lama_service.Models;
+using d_lama_service.Models.DataPointModels;
 using d_lama_service.Models.DataProcessing;
 using d_lama_service.Models.ProjectModels;
+using d_lama_service.Models.UserModels;
 using d_lama_service.Repositories;
 using Data;
 using Data.ProjectEntities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Immutable;
 using System.IO.Compression;
 using System.Linq.Expressions;
 using System.Net;
@@ -606,15 +609,29 @@ namespace d_lama_service.Controllers
         [HttpGet("{projectId:int}/GetLabeledData")]
         public async Task<IActionResult> GetLabeledDataForProject(int projectId) 
         {
-            var project = await GetProjectWithOwnerCheckAsync(projectId, e => e.DataPoints);
-            var labeledDataModelList = new Dictionary<int,LabeledDataPointModel>();  
+            var project = await GetProjectWithOwnerCheckAsync(projectId, e => e.DataPoints, e => e.Labels);
+            var labeledDataModelDic = new Dictionary<int,LabeledDataPointModel>();  
+            var userIds = new HashSet<int>();
             foreach (var dataPoint in project.DataPoints) 
             {
                 var dataPointStats = await _unitOfWork.LabeledDataPointRepository.GetLabeledDataPointStatisticAsync(dataPoint.Id);
-                labeledDataModelList.Add(dataPoint.Id, new LabeledDataPointModel(dataPointStats));
+                labeledDataModelDic.Add(dataPoint.DataPointIndex, new LabeledDataPointModel(dataPointStats));
             }
-            return Ok(labeledDataModelList);
+            var projectModel = new ProjectModel(project);
+
+            var userCompletion = await _unitOfWork.LabeledDataPointRepository.GetLabeledDataPointsProcessOfUser(project.DataPoints.Select(e => e.Id));
+            var labellers = new List<LabellerModel>();
+            foreach(var user in userCompletion)
+            {
+                var userInfo = (await _unitOfWork.UserRepository.GetAsync(user.Key));
+                labellers.Add(new LabellerModel { Id = userInfo!.Id, FirstName = userInfo.FirstName, LastName = userInfo.LastName, Percentage = user.Value });
+            }
+
+            var viewModel = new LabeledDataModel { DataPoints = labeledDataModelDic, Project = projectModel, Labellers = labellers };
+            return Ok(viewModel);
         }
+
+
 
         /// <summary>
         /// Gets information about a specific datapoint of a project.
