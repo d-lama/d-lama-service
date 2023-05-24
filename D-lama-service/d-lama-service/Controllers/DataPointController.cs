@@ -6,12 +6,9 @@ using d_lama_service.Models.ProjectModels;
 using d_lama_service.Models.UserModels;
 using d_lama_service.Repositories;
 using d_lama_service.Services;
-using Data;
 using Data.ProjectEntities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Immutable;
-using System.IO.Compression;
 using System.Linq.Expressions;
 using System.Net;
 using System.Text;
@@ -27,14 +24,16 @@ namespace d_lama_service.Controllers
     public class DataPointController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IDataPointService _dataPointService;
         private readonly ISharedService _sharedService;
 
         /// <summary>
         /// Constructor of the DataPointController.
         /// </summary>
-        public DataPointController(IUnitOfWork unitOfWork, ISharedService sharedService)
+        public DataPointController(IUnitOfWork unitOfWork, IDataPointService dataPointService, ISharedService sharedService)
         {
             _unitOfWork = unitOfWork;
+            _dataPointService = dataPointService;
             _sharedService = sharedService;
         }
 

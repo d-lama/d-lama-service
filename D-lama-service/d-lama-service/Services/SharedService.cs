@@ -8,12 +8,19 @@ using System.Net;
 
 namespace d_lama_service.Services
 {
+    /// <summary>
+    /// Implementation of the ISharedService interface.
+    /// The shared service handles the domain specific logic which are shared by different controllers.
+    /// </summary>
     public class SharedService : Service, ISharedService
     {
+        private readonly IUserRepository _userRepository;
+        private readonly IProjectRepository _projectRepository;
 
-        private IUserRepository _userRepository;
-        private IProjectRepository _projectRepository;
-
+        /// <summary>
+        /// Constructor of the SharedService.
+        /// </summary>
+        /// <param name="context"> The database context. </param>
         public SharedService(DataContext context) : base(context)
         {
             _userRepository = new UserRepository(context);

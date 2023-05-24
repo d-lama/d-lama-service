@@ -4,7 +4,7 @@ using Data;
 namespace d_lama_service.Services
 {
     /// <summary>
-    /// Interface of the IUserService.
+    /// Interface of the UserService.
     /// </summary>
     public interface IUserService : IService
     {

@@ -8,13 +8,14 @@ using System.Net;
 namespace d_lama_service.Services
 {
     /// <summary>
-    /// The User Service handles the domain specific logic regarding the users.
+    /// Implementation of the IUserService interface.
+    /// The user service handles the domain specific logic regarding the users.
     /// </summary>
     public class UserService : Service, IUserService
     {
-        private IUserRepository _userRepository;
-        private IDataPointRepository _dataPointRepository;
-        private ILabeledDataPointRepository _labeledDataPointRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IDataPointRepository _dataPointRepository;
+        private readonly ILabeledDataPointRepository _labeledDataPointRepository;
         private readonly IConfiguration _configuration;
         private readonly string _pepper;
         public static readonly int Iteration = 3;
@@ -96,7 +97,6 @@ namespace d_lama_service.Services
             }
             throw new RESTException(HttpStatusCode.Unauthorized, "Username is invalid!");
         }
-
 
         public async Task<UserRankingListModel> GetUserRankingTableAsync(User authUser) 
         {

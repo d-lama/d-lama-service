@@ -5,7 +5,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
 using d_lama_service.Services;
 
 namespace d_lama_service
@@ -68,10 +67,13 @@ namespace d_lama_service
 
             });
 
-            // DI
-            services.AddTransient<IUnitOfWork, UnitOfWork>();
+            // Dependency Injectino
+            services.AddTransient<IUnitOfWork, UnitOfWork>(); // TODO: Remove after completed refactoring
             services.AddTransient<ISharedService, SharedService>();
             services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IProjectService, ProjectService>();
+            services.AddTransient<IDataPointService, DataPointService>();
+
 
             var connectionIdentifier = "prd";
             if (_environment.IsDevelopment())
