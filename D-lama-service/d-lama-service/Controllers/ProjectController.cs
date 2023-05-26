@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using d_lama_service.Middleware;
 using d_lama_service.Models.UserModels;
 using d_lama_service.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace d_lama_service.Controllers
 {
@@ -19,16 +20,18 @@ namespace d_lama_service.Controllers
     {
         private readonly IProjectService _projectService;
         private readonly ISharedService _sharedService;
+        private readonly ILoggerService _loggerService;
 
         /// <summary>
         /// Constructor of the ProjectController.
         /// </summary>
         /// <param name="unitOfWork"> The unitOfWork for handling db access. </param>
         /// <param name="environment"> The web hosting environment. </param>
-        public ProjectController(IProjectService projectService, ISharedService sharedService) 
+        public ProjectController(IProjectService projectService, ISharedService sharedService, ILoggerService loggerService)
         {
             _projectService = projectService;
             _sharedService = sharedService;
+            _loggerService = loggerService;
         }
 
         /// <summary>
@@ -38,9 +41,28 @@ namespace d_lama_service.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
-            List<DetailedProjectModel> projectList = await _projectService.GetAllProjectsAsync(user);
-            return Ok(projectList);
+            try
+            {
+                User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                List<DetailedProjectModel> projectList = await _projectService.GetAllProjectsAsync(user);
+                _loggerService.LogInformation(user.Id, "All projects were retrieved successfully.");
+                return Ok(projectList);
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
 
         /// <summary>
@@ -52,8 +74,27 @@ namespace d_lama_service.Controllers
         [Route("My")]
         public async Task<IActionResult> GetMyProjects()
         {
-            User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
-            return Ok(await _projectService.GetProjectsOfOwnerAsync(user.Id));
+            try
+            {
+                User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                _loggerService.LogInformation(user.Id, $"All projects of the user were retrieved.");
+                return Ok(await _projectService.GetProjectsOfOwnerAsync(user.Id));
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
 
         /// <summary>
@@ -65,9 +106,28 @@ namespace d_lama_service.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get(int id)
         {
-            var user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
-            DetailedProjectModel project = await _projectService.GetProjectAsync(id, user);
-            return Ok(project);
+            try
+            {
+                var user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                DetailedProjectModel project = await _projectService.GetProjectAsync(id, user);
+                _loggerService.LogInformation(user.Id, $"The project with id {project.Id} was retrieved.");
+                return Ok(project);
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
 
         /// <summary>
@@ -80,10 +140,34 @@ namespace d_lama_service.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ProjectModel projectForm)
         {
-            User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
-            int projectId = await _projectService.CreateProjectAsync(user, projectForm);
-            var createdResource = new { id = projectId };
-            return CreatedAtAction(nameof(Get), createdResource, createdResource);
+            try
+            {
+                User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                int projectId = await _projectService.CreateProjectAsync(user, projectForm);
+                var createdResource = new { id = projectId };
+                _loggerService.LogInformation(user.Id, $"A new project with id {projectId} has been created.");
+                return CreatedAtAction(nameof(Get), createdResource, createdResource);
+            }
+            catch (DbUpdateException ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An error occurred while updating the database.");
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
 
         /// <summary>
@@ -97,9 +181,34 @@ namespace d_lama_service.Controllers
         [HttpPatch("{id:int}")]
         public async Task<IActionResult> Edit(int id, [FromBody] EditProjectModel projectForm)
         {
-            Project project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext, e => e.Labels);
-            await _projectService.UpdateProjectAsync(project, projectForm);
-            return await Get(id);
+            try
+            {
+                User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                Project project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext, e => e.Labels);
+                await _projectService.UpdateProjectAsync(project, projectForm);
+                _loggerService.LogInformation(user.Id, $"Project {project.Id} was edited.");
+                return await Get(id);
+            }
+            catch (DbUpdateException ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An error occurred while updating the database.");
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
 
 
@@ -113,9 +222,34 @@ namespace d_lama_service.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            Project project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext);
-            await _projectService.DeleteProjectAsync(project);            
-            return Ok();
+            try
+            {
+                User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                Project project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext);
+                _loggerService.LogInformation(user.Id, $"Project {project.Id} was deleted.");
+                await _projectService.DeleteProjectAsync(project);
+                return Ok();
+            }
+            catch (DbUpdateException ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An error occurred while updating the database.");
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
 
         /// <summary>
@@ -129,9 +263,34 @@ namespace d_lama_service.Controllers
         [HttpPost("{id:int}/Labels/")]
         public async Task<IActionResult> AddLabels(int id, [FromBody] LabelSetModel[] newLabels) 
         {
-            Project project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext, e => e.Labels);
-            await _projectService.CreateLablesAsync(project, newLabels);
-            return Ok();
+            try
+            {
+                User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                Project project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext, e => e.Labels);
+                await _projectService.CreateLablesAsync(project, newLabels);
+                _loggerService.LogInformation(user.Id, $"Labels for project {project.Id} were created.");
+                return Ok();
+            }
+            catch (DbUpdateException ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An error occurred while updating the database.");
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
 
         /// <summary>
@@ -145,9 +304,34 @@ namespace d_lama_service.Controllers
         [HttpDelete("{id:int}/Labels/{labelId:int}")]
         public async Task<IActionResult> RemoveLabel(int id, int labelId)
         {
-            await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext);
-            await _projectService.DeleteLabelAsync(id, labelId);
-            return Ok();
+            try
+            {
+                User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext);
+                await _projectService.DeleteLabelAsync(id, labelId);
+                _loggerService.LogInformation(user.Id, $"Label {labelId} of project {id} was deleted.");
+                return Ok();
+            }
+            catch (DbUpdateException ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An error occurred while updating the database.");
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
 
         /// <summary>
@@ -160,9 +344,29 @@ namespace d_lama_service.Controllers
         [HttpGet("{id:int}/Ranking")]
         public async Task<IActionResult> GetRanking(int id) 
         {
-            Project project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext, e => e.DataPoints);
-            List<UserRankingModel> rankingList = await _projectService.GetProjectRankingList(project);
-            return Ok(rankingList);
+            try
+            {
+                User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                Project project = await _sharedService.GetProjectWithOwnerCheckAsync(id, HttpContext, e => e.DataPoints);
+                List<UserRankingModel> rankingList = await _projectService.GetProjectRankingList(project);
+                _loggerService.LogInformation(user.Id, $"Ranking overview for project {id} was retrieved.");
+                return Ok(rankingList);
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
     }
 }

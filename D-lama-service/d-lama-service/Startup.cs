@@ -71,6 +71,7 @@ namespace d_lama_service
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IProjectService, ProjectService>();
             services.AddTransient<IDataPointService, DataPointService>();
+            services.AddScoped<ILoggerService, FileLoggerService>();
 
             var connectionIdentifier = "prd";
             if (_environment.IsDevelopment())
