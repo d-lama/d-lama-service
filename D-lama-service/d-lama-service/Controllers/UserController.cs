@@ -2,8 +2,10 @@
 using d_lama_service.Models.UserModels;
 using d_lama_service.Services;
 using Data;
+using Data.ProjectEntities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace d_lama_service.Controllers
 {
@@ -17,16 +19,18 @@ namespace d_lama_service.Controllers
     {
         private readonly IUserService _userService;
         private readonly ISharedService _sharedService;
+        private readonly ILoggerService _loggerService;
 
         /// <summary>
         /// Constructor of the UserController.
         /// </summary>
         /// <param name="userService"> The user service which handles the domain logic for the users. </param>
         /// <param name="sharedService"> The shared service which provides shared methods. </param>
-        public UserController(IUserService userService, ISharedService sharedService)
+        public UserController(IUserService userService, ISharedService sharedService, ILoggerService loggerService)
         {
             _userService = userService;
             _sharedService = sharedService;
+            _loggerService = loggerService;
         }
 
         /// <summary>
@@ -39,8 +43,28 @@ namespace d_lama_service.Controllers
         [HttpPost("AuthToken")]
         public async Task<IActionResult> AuthToken([FromBody] LoginModel loginRequest)
         {
-            string token = await _userService.GetAuthTokenAsync(loginRequest);
-            return Ok(token);
+            try
+            {
+                string token = await _userService.GetAuthTokenAsync(loginRequest);
+                _loggerService.LogInformation(-1, "JWT-Auth token were successfully returned.");
+                return Ok(token);
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
+
         }
 
         /// <summary>
@@ -54,9 +78,33 @@ namespace d_lama_service.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] RegisterModel registerRequest)
         {
-            var userId = await _userService.CreateUserAsync(registerRequest);
-            var createdResource = new { id = userId };
-            return CreatedAtAction(nameof(Get), createdResource, createdResource);
+            try
+            {
+                var userId = await _userService.CreateUserAsync(registerRequest);
+                var createdResource = new { id = userId };
+                _loggerService.LogInformation(userId, "New user has been created.");
+                return CreatedAtAction(nameof(Get), createdResource, createdResource);
+            }
+            catch (DbUpdateException ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An error occurred while updating the database.");
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
 
         /// <summary>
@@ -66,8 +114,27 @@ namespace d_lama_service.Controllers
         [HttpGet("Me")]
         public async Task<IActionResult> GetMe() 
         {
-            User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
-            return Ok(user);
+            try
+            {
+                User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                _loggerService.LogInformation(user.Id, "Authenticated user was retrieved.");
+                return Ok(user);
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
 
         /// <summary>
@@ -78,8 +145,27 @@ namespace d_lama_service.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            var user = await _userService.GetUserAsync(id);
-            return Ok(user);
+            try
+            {
+                var user = await _userService.GetUserAsync(id);
+                _loggerService.LogInformation(id, "User was retrieved by id.");
+                return Ok(user);
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
         }
 
         /// <summary>
@@ -90,9 +176,34 @@ namespace d_lama_service.Controllers
         [HttpPatch("Me")]
         public async Task<IActionResult> EditMe([FromBody] EditUserModel modifiedUser) 
         {
-            User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
-            await _userService.UpdateUserAsync(user, modifiedUser);
-            return await GetMe();
+            try
+            {
+                User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                await _userService.UpdateUserAsync(user, modifiedUser);
+                _loggerService.LogInformation(user.Id, "User was retrieved by id.");
+                return await GetMe();
+            }
+            catch (DbUpdateException ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An error occurred while updating the database.");
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
+
         }
 
         /// <summary>
@@ -102,9 +213,29 @@ namespace d_lama_service.Controllers
         [HttpGet("Ranking")]
         public async Task<IActionResult> GetUserRanking() 
         {
-            User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
-            UserRankingListModel rankingList = await _userService.GetUserRankingTableAsync(user);
-            return Ok(rankingList);
+            try
+            {
+                User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
+                UserRankingListModel rankingList = await _userService.GetUserRankingTableAsync(user);
+                _loggerService.LogInformation(user.Id, "User ranking was successfully retrieved.");
+                return Ok(rankingList);
+            }
+            catch (ArgumentNullException ex)
+            {
+                _loggerService.LogException(ex);
+                return BadRequest("One or more required parameters are null.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _loggerService.LogException(ex);
+                return Conflict("Operation not allowed due to current object state.");
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogException(ex);
+                return StatusCode(500, "An unexpected error occurred while retrieving the data points.");
+            }
+
         }
     }
 }
