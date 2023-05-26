@@ -63,7 +63,6 @@ namespace d_lama_service.Services
             return await CreateReadDataPointModelListAsync(user, project, dataPoints);
         }
 
-
         public async Task<int> GetDataPointsCountOfProjectAsync(int projectId)
         {
             var project = await GetProjectAsync(projectId);
@@ -148,7 +147,6 @@ namespace d_lama_service.Services
             return imageDataPoint.DataPointIndex;
         }
 
-
         public async Task CreateImageDataPointsAsync(Project project, IFormFile file)
         {
             ValidateFile(file, ProjectDataType.Image, project.DataType);
@@ -197,9 +195,6 @@ namespace d_lama_service.Services
             await SaveAsync();
         }
 
-
-
-
         public async Task DeleteDataPointsAsync(Project project, int? startIndex = null, int? endIndex = null)  // TODO Check if really deleted!
         {
             bool isImageProject = project.DataType == ProjectDataType.Image;
@@ -220,7 +215,6 @@ namespace d_lama_service.Services
             _projectRepository.Update(project);
             await SaveAsync();
         }
-
 
         public async Task LabelDataPointsAsync(User user, int projectId, int dataPointIndex, int labelId)
         {
@@ -285,15 +279,6 @@ namespace d_lama_service.Services
             return labeledData;
         }
 
-
-
-
-
-
-
-
-
-
         private async Task<Label> GetLabelAsync(int labelId)
         {
             Label? label = await _labelRepository.GetAsync(labelId);
@@ -303,10 +288,6 @@ namespace d_lama_service.Services
             }
             return label;
         }
-
-
-
-
 
         private async Task DeleteImageDataPointAsync(DataPoint dataPoint)
         {
@@ -347,11 +328,6 @@ namespace d_lama_service.Services
             }
             return dataPoint;
         }
-
-
-
-
-
 
         private void ValidateFile(IFormFile file, ProjectDataType wantedType, ProjectDataType realType)
         {
@@ -460,7 +436,6 @@ namespace d_lama_service.Services
             }
             return responseList;
         }
-
 
         private async Task<bool> IsDataPointLabeledByUser(User user, int projectId, int dataPointIndex)
         {
