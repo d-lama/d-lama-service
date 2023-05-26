@@ -1,5 +1,4 @@
 ﻿using Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace d_lama_service.Services
 {

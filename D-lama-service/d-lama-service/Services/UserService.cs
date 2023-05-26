@@ -1,7 +1,7 @@
 ﻿using d_lama_service.Models;
 using d_lama_service.Models.UserModels;
-using d_lama_service.Repositories;
-using d_lama_service.Repositories.ProjectRepositories;
+using d_lama_service.Repositories.DataPointRepositories;
+using d_lama_service.Repositories.UserRepositories;
 using Data;
 using System.Net;
 

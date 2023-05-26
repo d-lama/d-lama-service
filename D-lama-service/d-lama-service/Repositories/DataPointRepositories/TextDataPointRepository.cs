@@ -2,17 +2,17 @@
 using Data;
 using Data.ProjectEntities;
 
-namespace d_lama_service.Repositories.ProjectRepositories
+namespace d_lama_service.Repositories.DataPointRepositories
 {
     /// <summary>
-    /// ImageDataPointRepository Class.
+    /// TextDataPointRepository Class.
     /// </summary>
-    public class ImageDataPointRepository : Repository<ImageDataPoint>, IImageDataPointRepository
+    public class TextDataPointRepository : Repository<TextDataPoint>, ITextDataPointRepository
     {
         /// <summary>
         /// Constructor of TextDataPointRepository.
         /// </summary>
         /// <param name="context"> The DB context. </param>
-        public ImageDataPointRepository(DataContext context) : base(context) { }
+        public TextDataPointRepository(DataContext context) : base(context) { }
     }
 }

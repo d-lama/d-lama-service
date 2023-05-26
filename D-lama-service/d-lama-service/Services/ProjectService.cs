@@ -2,7 +2,9 @@
 using d_lama_service.Models.ProjectModels;
 using d_lama_service.Models.UserModels;
 using d_lama_service.Repositories;
+using d_lama_service.Repositories.DataPointRepositories;
 using d_lama_service.Repositories.ProjectRepositories;
+using d_lama_service.Repositories.UserRepositories;
 using Data;
 using Data.ProjectEntities;
 using System.Net;
@@ -87,7 +89,6 @@ namespace d_lama_service.Services
             await SaveAsync();
         }
 
-        // TODO: Check if could change to detailedProjectModel
         public async Task<List<Project>> GetProjectsOfOwnerAsync(int ownerId)
         {
             return (await _projectRepository.FindAsync(e => e.OwnerId == ownerId)).ToList();

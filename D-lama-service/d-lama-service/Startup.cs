@@ -1,4 +1,3 @@
-using d_lama_service.Repositories;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -68,12 +67,10 @@ namespace d_lama_service
             });
 
             // Dependency Injectino
-            services.AddTransient<IUnitOfWork, UnitOfWork>(); // TODO: Remove after completed refactoring
             services.AddTransient<ISharedService, SharedService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IProjectService, ProjectService>();
             services.AddTransient<IDataPointService, DataPointService>();
-
 
             var connectionIdentifier = "prd";
             if (_environment.IsDevelopment())
@@ -111,7 +108,6 @@ namespace d_lama_service
             });
 
             services.AddAuthorization();
-
         }
 
         /// <summary>

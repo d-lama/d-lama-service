@@ -1,6 +1,5 @@
 ﻿using d_lama_service.Middleware;
 using d_lama_service.Models.UserModels;
-using d_lama_service.Repositories;
 using d_lama_service.Services;
 using Data;
 using Microsoft.AspNetCore.Authorization;

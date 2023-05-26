@@ -1,11 +1,8 @@
 ﻿using d_lama_service.Models.ProjectModels;
 using d_lama_service.Models.UserModels;
 using Data.ProjectEntities;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
@@ -51,7 +48,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetAllDataPoints_TextNoLogin_ReturnsUnauthorized()
+        public async Task GetAll_TextNoLogin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id;
@@ -65,7 +62,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetAllDataPoints_ImageNoLogin_ReturnsUnauthorized()
+        public async Task GetAll_ImageNoLogin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id;
@@ -79,7 +76,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetAllDataPoints_InvalidId_ReturnsNotFound()
+        public async Task GetAll_InvalidId_ReturnsNotFound()
         {
             // Arrange
             var uri = _apiRoute + "/-1";
@@ -95,7 +92,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetAllDataPoints_TextDataPointsPresent_ReturnsOK()
+        public async Task GetAll_TextDataPointsPresent_ReturnsOK()
         {
             // Arrange
             await AddSomeTextDataPoints(3);
@@ -112,7 +109,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetAllDataPoints_ImageDataPointsPresent_ReturnsOK()
+        public async Task GetAll_ImageDataPointsPresent_ReturnsOK()
         {
             // Arrange
             await AddSomeImageDataPoints();
@@ -129,7 +126,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetAllDataPoints_Empty_ReturnsNotFound()
+        public async Task GetAll_Empty_ReturnsOk()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id;
@@ -141,11 +138,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task GetNumberOfDataPoints_NoLogin_ReturnsUnauthorized()
+        public async Task GetCount_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetNumberOfDataPoints";
@@ -159,7 +156,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetNumberOfDataPoints_InvalidId_ReturnsNotFound()
+        public async Task GetCount_InvalidId_ReturnsNotFound()
         {
             // Arrange
             var uri = _apiRoute + "/-1" + "/GetNumberOfDataPoints";
@@ -175,7 +172,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetNumberOfDataPoints_NoDataPointsPresent_ReturnsOK()
+        public async Task GetCount_NoDataPointsPresent_ReturnsOK()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetNumberOfDataPoints";
@@ -194,7 +191,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetNumberOfDataPoints_TextDataPointsPresent_ReturnsOK()
+        public async Task GetCount_TextDataPointsPresent_ReturnsOK()
         {
             // Arrange
             await AddSomeTextDataPoints(6);
@@ -214,7 +211,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetNumberOfDataPoints_ImageDataPointsPresent_ReturnsOK()
+        public async Task GetCount_ImageDataPointsPresent_ReturnsOK()
         {
             // Arrange
             await AddSomeImageDataPoints();
@@ -234,7 +231,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetDataPointByIndex_NoLogin_ReturnsUnauthorized()
+        public async Task Get_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
             await AddSomeTextDataPoints(3);
@@ -249,7 +246,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetDataPointByIndex_TextDataPointsPresent_ReturnsOK()
+        public async Task Get_TextDataPointsPresent_ReturnsOK()
         {
             // Arrange
             await AddSomeTextDataPoints(3);
@@ -266,7 +263,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetDataPointByIndex_ImageDataPointsPresent_ReturnsOK()
+        public async Task Get_ImageDataPointsPresent_ReturnsOK()
         {
             // Arrange
             await AddSomeImageDataPoints();
@@ -283,7 +280,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetDataPointByIndex_Empty_ReturnsNotFound()
+        public async Task Get_Empty_ReturnsNotFound()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/" + 1;
@@ -299,7 +296,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetDataPointRange_NoLogin_ReturnsUnauthorized()
+        public async Task GetRange_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
             await AddSomeTextDataPoints(4);
@@ -314,7 +311,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetDataPointRange_TextDataPointsPresent_ReturnsOK()
+        public async Task GetRange_TextDataPointsPresent_ReturnsOK()
         {
             // Arrange
             await AddSomeTextDataPoints(4);
@@ -331,7 +328,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetDataPointRange_ImageDataPointsPresent_ReturnsOK()
+        public async Task GetRange_ImageDataPointsPresent_ReturnsOK()
         {
             // Arrange
             await AddSomeImageDataPoints();
@@ -348,7 +345,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetDataPointRange_Empty_ReturnsNotFound()
+        public async Task GetRange_Empty_ReturnsOk()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/" + 1 + "/" + 2;
@@ -360,11 +357,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task CreateSingleTextDataPoint_NoLogin_ReturnsUnauthorized()
+        public async Task CreateTextPoint_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/CreateSingleTextDataPoint";
@@ -381,7 +378,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task CreateSingleTextDataPoint_NonAdmin_ReturnsUnauthorized()
+        public async Task CreateTextPoint_NonAdmin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/CreateSingleTextDataPoint";
@@ -400,7 +397,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task CreateSingleTextDataPoint_WrongAdmin_ReturnsUnauthorized()
+        public async Task CreateTextPoint_WrongAdmin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/CreateSingleTextDataPoint";
@@ -419,7 +416,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task CreateSingleTextDataPoint_FirstEntry_ReturnsCreated()
+        public async Task CreateTextPoint_FirstEntry_ReturnsCreated()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/CreateSingleTextDataPoint";
@@ -438,7 +435,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task CreateSingleTextDataPoint_AppendToExisting_ReturnsCreated()
+        public async Task CreateTextPoint_AppendToExisting_ReturnsCreated()
         {
             // Arrange
             await AddSomeTextDataPoints(3);
@@ -458,7 +455,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task CreateSingleTextDataPoint_WrongProjectId_ReturnsNotFound()
+        public async Task CreateTextPoint_WrongProjectId_ReturnsNotFound()
         {
             // Arrange
             await AddSomeTextDataPoints(3);
@@ -478,7 +475,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_NoLogin_ReturnsUnauthorized()
+        public async Task CreateImagePoint_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
@@ -495,7 +492,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_NonAdmin_ReturnsUnauthorized()
+        public async Task CreateImagePoint_NonAdmin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
@@ -514,7 +511,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_WrongAdmin_ReturnsUnauthorized()
+        public async Task CreateImagePoint_WrongAdmin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
@@ -533,7 +530,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_Jpg100KbFirstEntry_ReturnsOk()
+        public async Task CreateImagePoint_Jpg100KbFirstEntry_ReturnsCreated()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
@@ -548,11 +545,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_Png500KbFirstEntry_ReturnsOk()
+        public async Task CreateImagePoint_Png500KbFirstEntry_ReturnsCreated()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
@@ -567,11 +564,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_Jpeg1MbFirstEntry_ReturnsOk()
+        public async Task CreateImagePoint_Jpeg1MbFirstEntry_ReturnsCreated()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
@@ -586,11 +583,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_Jpg15MbFirstEntry_ReturnsOk()
+        public async Task CreateImagePoint_Jpg15MbFirstEntry_ReturnsCreated()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
@@ -605,11 +602,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_Jpg100KbAppendToExisting_ReturnsOk()
+        public async Task CreateImagePoint_Jpg100KbAppendToExisting_ReturnsCreated()
         {
             // Arrange
             await AddSomeImageDataPoints();
@@ -625,11 +622,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_Png500KbAppendToExisting_ReturnsOk()
+        public async Task CreateImagePoint_Png500KbAppendToExisting_ReturnsCreated()
         {
             // Arrange
             await AddSomeImageDataPoints();
@@ -645,11 +642,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_Jpeg1MbAppendToExisting_ReturnsOk()
+        public async Task CreateImagePoint_Jpeg1MbAppendToExisting_ReturnsCreated()
         {
             // Arrange
             await AddSomeImageDataPoints();
@@ -665,11 +662,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_Jpg15MbAppendToExisting_ReturnsOk()
+        public async Task CreateImagePoint_Jpg15MbAppendToExisting_ReturnsCreated()
         {
             // Arrange
             await AddSomeImageDataPoints();
@@ -685,11 +682,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task UploadSingleImageDataPoint_WrongProjectId_ReturnsNotFound()
+        public async Task CreateImagePoint_WrongProjectId_ReturnsNotFound()
         {
             // Arrange
             await AddSomeTextDataPoints(3);
@@ -709,7 +706,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadMultipleImageDataPoints_Jpg100Kb_ReturnsOk()
+        public async Task UploadMultipleImageDataPoints_Jpg100Kb_ReturnsCreated()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadSingleImageDataPoint";
@@ -726,12 +723,12 @@ namespace Test.IntegrationTests
                 var response = await Client.SendAsync(request);
 
                 // Assert
-                Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+                Assert.AreEqual(HttpStatusCode.Created, response.StatusCode);
             }
         }
 
         [TestMethod]
-        public async Task UploadTextDataPoints_NoLogin_ReturnsUnauthorized()
+        public async Task CreateMutlipleTextPoints_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/UploadTextDataPoints";
@@ -745,7 +742,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadTextDataPoints_NonAdmin_ReturnsUnauthorized()
+        public async Task CreateMutlipleTextPoints_NonAdmin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/UploadTextDataPoints";
@@ -761,7 +758,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadTextDataPoints_WrongAdmin_ReturnsUnauthorized()
+        public async Task CreateMutlipleTextPoints_WrongAdmin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/UploadTextDataPoints";
@@ -780,7 +777,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadTextDataPoints_UnsupportedFile_ReturnsBadRequest()
+        public async Task CreateMutlipleTextPoints_UnsupportedFile_ReturnsBadRequest()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/UploadTextDataPoints";
@@ -799,7 +796,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadTextDataPoints_ValidTxtFile_ReturnsOK()
+        public async Task CreateMutlipleTextPoints_ValidTxtFile_ReturnsOK()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/UploadTextDataPoints";
@@ -818,7 +815,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadTextDataPoints_ValidCsvFile_ReturnsOK()
+        public async Task CreateMutlipleTextPoints_ValidCsvFile_ReturnsOK()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/UploadTextDataPoints";
@@ -837,7 +834,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadTextDataPoints_ValidJsonFile_ReturnsOK()
+        public async Task CreateMutlipleTextPoints_ValidJsonFile_ReturnsOK()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/UploadTextDataPoints";
@@ -856,7 +853,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadImageDataPoints_NoLogin_ReturnsUnauthorized()
+        public async Task CreateMultipleImagePoints_NoLogin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
@@ -873,7 +870,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadImageDataPoints_NonAdmin_ReturnsUnauthorized()
+        public async Task CreateMultipleImagePoints_NonAdmin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
@@ -889,7 +886,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadImageDataPoints_WrongAdmin_ReturnsUnauthorized()
+        public async Task CreateMultipleImagePoints_WrongAdmin_ReturnsUnauthorized()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
@@ -908,7 +905,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadImageDataPoints_UnsupportedFile_ReturnsBadRequest()
+        public async Task CreateMultipleImagePoints_UnsupportedFile_ReturnsBadRequest()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
@@ -927,7 +924,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadImageDataPoints_ValidZipFileJpg_ReturnsOK()
+        public async Task CreateMultipleImagePoints_ValidZipFileJpg_ReturnsOK()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
@@ -946,7 +943,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadImageDataPoints_ValidZipFilePng_ReturnsOK()
+        public async Task CreateMultipleImagePoints_ValidZipFilePng_ReturnsOK()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
@@ -965,7 +962,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task UploadImageDataPoints_ValidZipFileJpeg_ReturnsOK()
+        public async Task CreateMultipleImagePoints_ValidZipFileJpeg_ReturnsOK()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/UploadImageDataPoints";
@@ -984,7 +981,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditTextDataPoint_NoLogin_ReturnsUnauthorized()
+        public async Task EditTextPoint_NoLogin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1002,7 +999,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditTextDataPoint_NonAdmin_ReturnsUnauthorized()
+        public async Task EditTextPoint_NonAdmin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1022,7 +1019,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditTextDataPoint_WrongAdmin_ReturnsUnauthorized()
+        public async Task EditTextPoint_WrongAdmin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1042,7 +1039,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditTextDataPoint_WrongDataType_ReturnsBadRequest()
+        public async Task EditTextPoint_WrongDataType_ReturnsBadRequest()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1062,7 +1059,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditTextDataPoint_CorrectAdmin_ReturnsOK()
+        public async Task EditTextPoint_CorrectAdmin_ReturnsOK()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1082,7 +1079,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditTextDataPoint_WrongProjectId_ReturnsNotFound()
+        public async Task EditTextPoint_WrongProjectId_ReturnsNotFound()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1102,7 +1099,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditTextDataPoint_WrongDataPointId_ReturnsNotFound()
+        public async Task EditTextPoint_WrongDataPointId_ReturnsNotFound()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1122,7 +1119,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditTextDataPoint_NoDataPointsPresent_ReturnsNotFound()
+        public async Task EditTextPoint_NoDataPointsPresent_ReturnsNotFound()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/EditTextDataPoint/" + (1);
@@ -1141,7 +1138,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditImageDataPoint_NoLogin_ReturnsUnauthorized()
+        public async Task EditImagePoint_NoLogin_ReturnsUnauthorized()
         {
             await AddSomeImageDataPoints();
             // Arrange
@@ -1159,7 +1156,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditImageDataPoint_NonAdmin_ReturnsUnauthorized()
+        public async Task EditImagePoint_NonAdmin_ReturnsUnauthorized()
         {
             await AddSomeImageDataPoints();
             // Arrange
@@ -1179,7 +1176,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditImageDataPoint_WrongAdmin_ReturnsUnauthorized()
+        public async Task EditImagePoint_WrongAdmin_ReturnsUnauthorized()
         {
             await AddSomeImageDataPoints();
             // Arrange
@@ -1199,7 +1196,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditImageDataPoint_WrongDataType_ReturnsBadRequest()
+        public async Task EditImagePoint_WrongDataType_ReturnsBadRequest()
         {
             await AddSomeImageDataPoints();
             // Arrange
@@ -1219,7 +1216,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditImageDataPoint_CorrectAdmin_ReturnsOK()
+        public async Task EditImagePoint_CorrectAdmin_ReturnsOK()
         {
             await AddSomeImageDataPoints();
             // Arrange
@@ -1239,7 +1236,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditImageDataPoint_WrongProjectId_ReturnsNotFound()
+        public async Task EditImagePoint_WrongProjectId_ReturnsNotFound()
         {
             await AddSomeImageDataPoints();
             // Arrange
@@ -1259,7 +1256,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditImageDataPoint_WrongDataPointId_ReturnsNotFound()
+        public async Task EditImagePoint_WrongDataPointId_ReturnsNotFound()
         {
             await AddSomeImageDataPoints();
             // Arrange
@@ -1279,7 +1276,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task EditImageDataPoint_NoDataPointsPresent_ReturnsNotFound()
+        public async Task EditImagePoint_NoDataPointsPresent_ReturnsNotFound()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectImage.Id + "/EditImageDataPoint/" + (1);
@@ -1298,7 +1295,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllDataPoints_NoLogin_ReturnsUnauthorized()
+        public async Task DeleteAll_NoLogin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1313,7 +1310,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllDataPoints_NonAdmin_ReturnsUnauthorized()
+        public async Task DeleteAll_NonAdmin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1330,7 +1327,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllDataPoints_WrongAdmin_ReturnsUnauthorized()
+        public async Task DeleteAll_WrongAdmin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1347,7 +1344,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllDataPoints_TextCorrectAdmin_ReturnsOK()
+        public async Task DeleteAll_TextCorrectAdmin_ReturnsOK()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1364,7 +1361,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllDataPoints_ImageCorrectAdmin_ReturnsOK()
+        public async Task DeleteAll_ImageCorrectAdmin_ReturnsOK()
         {
             await AddSomeImageDataPoints();
             // Arrange
@@ -1381,7 +1378,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteAllDataPoints_NoDataPointsPresent_ReturnsNotFound()
+        public async Task DeleteAll_NoDataPointsPresent_ReturnsOk()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints";
@@ -1393,11 +1390,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task DeleteAllDataPoints_WrongProjectId_ReturnsNotFound()
+        public async Task DeleteAll_WrongProjectId_ReturnsNotFound()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1414,7 +1411,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteDataPointRange_NoLogin_ReturnsUnauthorized()
+        public async Task DeleteTextPointRange_NoLogin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1429,7 +1426,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteDataPointRange_NonAdmin_ReturnsUnauthorized()
+        public async Task DeleteTextPointRange_NonAdmin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1446,7 +1443,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteDataPointRange_WrongAdmin_ReturnsUnauthorized()
+        public async Task DeleteTextPointRange_WrongAdmin_ReturnsUnauthorized()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1463,7 +1460,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteDataPointRange_TextCorrectAdmin_ReturnsOK()
+        public async Task DeleteTextPointRange_TextCorrectAdmin_ReturnsOK()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1480,7 +1477,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteDataPointRange_ImageCorrectAdmin_ReturnsOK()
+        public async Task DeleteTextPointRange_ImageCorrectAdmin_ReturnsOK()
         {
             await AddSomeImageDataPoints();
             // Arrange
@@ -1497,7 +1494,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task DeleteDataPointRange_NoDataPointsPresent_ReturnsNotFound()
+        public async Task DeleteTextPointRange_NoDataPointsPresent_ReturnsOk()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/DeleteDataPoints/" + 1 + "/" + 2;
@@ -1509,11 +1506,11 @@ namespace Test.IntegrationTests
             var response = await Client.SendAsync(request);
 
             // Assert
-            Assert.AreEqual(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
         }
 
         [TestMethod]
-        public async Task DeleteDataPointRange_WrongProjectId_ReturnsNotFound()
+        public async Task DeleteTextPointRange_WrongProjectId_ReturnsNotFound()
         {
             await AddSomeTextDataPoints(4);
             // Arrange
@@ -1554,7 +1551,7 @@ namespace Test.IntegrationTests
 
 
         [TestMethod]
-        public async Task LabelDataPoint_InvalidDataPointIndex()
+        public async Task LabelPoint_InvalidDataPointIndex()
         {
             // Arrange
             await AddSomeTextDataPoints(1);
@@ -1578,7 +1575,7 @@ namespace Test.IntegrationTests
 
 
         [TestMethod]
-        public async Task LabelDataPoint_InvalidLabelId()
+        public async Task LabelPoint_InvalidLabelId()
         {
             // Arrange
             await AddSomeTextDataPoints(1);
@@ -1602,7 +1599,7 @@ namespace Test.IntegrationTests
 
 
         [TestMethod]
-        public async Task LabelDataPoint_Valid()
+        public async Task LabelPoint_Valid()
         {
             // Arrange
             await AddSomeTextDataPoints(1);
@@ -1626,7 +1623,7 @@ namespace Test.IntegrationTests
 
 
         [TestMethod]
-        public async Task LabelDataPoint_AlreadyLabeled()
+        public async Task LabelPoint_AlreadyLabeled()
         {
             // Arrange
             await AddSomeTextDataPoints(1);
@@ -1657,7 +1654,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task RemoveLabelDataPoint_InvalidProject()
+        public async Task RemoveLabeledPoint_InvalidProject()
         {
             // Arrange
             await AddSomeTextDataPoints(1);
@@ -1680,7 +1677,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task RemoveLabelDataPoint_InvalidDataPointIndex()
+        public async Task RemoveLabeledPoint_InvalidDataPointIndex()
         {
             // Arrange
             await AddSomeTextDataPoints(1);
@@ -1703,7 +1700,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task RemoveLabelDataPoint_WrongUser()
+        public async Task RemoveLabeledPoint_WrongUser()
         {
             // Arrange
             await AddSomeTextDataPoints(1);
@@ -1726,7 +1723,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task RemoveLabelDataPoint_Valid()
+        public async Task RemoveLabeledPoint_Valid()
         {
             // Arrange
             await AddSomeTextDataPoints(1);
@@ -1749,7 +1746,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetLabeledDataForProject_InvalidProjectId() 
+        public async Task GetLabeledData_InvalidProjectId() 
         {
             // Arrange
             var uri = _apiRoute + "/-1/GetLabeledData";
@@ -1766,7 +1763,7 @@ namespace Test.IntegrationTests
 
 
         [TestMethod]
-        public async Task GetLabeledDataForProject_InvalidOwner()
+        public async Task GetLabeledData_InvalidOwner()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetLabeledData";
@@ -1783,7 +1780,7 @@ namespace Test.IntegrationTests
 
 
         [TestMethod]
-        public async Task GetLabeledDataForProject_ValidRequest_NoDataPoints()
+        public async Task GetLabeledData_ValidRequest_NoDataPoints()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetLabeledData";
@@ -1800,7 +1797,7 @@ namespace Test.IntegrationTests
 
 
         [TestMethod]
-        public async Task GetLabeledDataForProject_ValidRequest()
+        public async Task GetLabeledData_ValidRequest()
         {
             // Arrange
             await AddSomeTextDataPoints(10);
@@ -1817,7 +1814,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetLabeledDataPointForProject_InvalidDataPointIndex()
+        public async Task GetLabeledPoint_InvalidDataPointIndex()
         {
             // Arrange
             var uri = _apiRoute + "/" + _adminProjectText.Id + "/GetLabeledData/" + -1;
@@ -1833,7 +1830,7 @@ namespace Test.IntegrationTests
         }
 
         [TestMethod]
-        public async Task GetLabeledDataPointForProject_ValidRequest()
+        public async Task GetLabeledPoint_ValidRequest()
         {
             // Arrange
             await AddSomeTextDataPoints(1);
