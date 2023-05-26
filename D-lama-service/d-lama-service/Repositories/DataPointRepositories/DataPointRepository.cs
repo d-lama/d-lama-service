@@ -2,7 +2,7 @@
 using Data;
 using Data.ProjectEntities;
 
-namespace d_lama_service.Repositories.ProjectRepositories
+namespace d_lama_service.Repositories.DataPointRepositories
 {
     public class DataPointRepository : Repository<DataPoint>, IDataPointRepository
     {

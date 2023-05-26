@@ -3,7 +3,7 @@ using Data;
 using Data.ProjectEntities;
 using Microsoft.EntityFrameworkCore;
 
-namespace d_lama_service.Repositories.ProjectRepositories
+namespace d_lama_service.Repositories.DataPointRepositories
 {
     public class LabeledDataPointRepository : Repository<LabeledDataPoint>, ILabeledDataPointRepository
     {
@@ -24,13 +24,13 @@ namespace d_lama_service.Repositories.ProjectRepositories
             return result;
         }
 
-        public async Task<Dictionary<int, float>> GetLabeledDataPointsProcessOfUser(IEnumerable<int> dataPointIds) 
+        public async Task<Dictionary<int, float>> GetLabeledDataPointsProcessOfUser(IEnumerable<int> dataPointIds)
         {
             var result = new Dictionary<int, float>();
             await Entities
                 .Where(e => dataPointIds.Contains(e.DataPointId))
                 .GroupBy(e => e.UserId)
-                .Select(e => new { e.Key, Percentage = (float)e.Count() / (float)dataPointIds.Count() })
+                .Select(e => new { e.Key, Percentage = e.Count() / (float)dataPointIds.Count() })
                 .ForEachAsync(e => { result.Add(e.Key, e.Percentage); });
             return result;
         }

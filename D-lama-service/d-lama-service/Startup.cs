@@ -1,11 +1,10 @@
-using d_lama_service.Repositories;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
+using d_lama_service.Services;
 
 namespace d_lama_service
 {
@@ -67,7 +66,11 @@ namespace d_lama_service
 
             });
 
-            services.AddTransient<IUnitOfWork, UnitOfWork>(); // DI
+            // Dependency Injectino
+            services.AddTransient<ISharedService, SharedService>();
+            services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IProjectService, ProjectService>();
+            services.AddTransient<IDataPointService, DataPointService>();
 
             var connectionIdentifier = "prd";
             if (_environment.IsDevelopment())
@@ -105,7 +108,6 @@ namespace d_lama_service
             });
 
             services.AddAuthorization();
-
         }
 
         /// <summary>

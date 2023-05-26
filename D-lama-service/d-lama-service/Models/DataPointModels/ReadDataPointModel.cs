@@ -1,9 +1,9 @@
 ﻿using Data.ProjectEntities;
 using System.ComponentModel.DataAnnotations;
 
-namespace d_lama_service.Models.ProjectModels
+namespace d_lama_service.Models.DataPointModels
 {
-    public class ReadTextDataPointModel : TextDataPointModel
+    public abstract class ReadDataPointModel
     {
         [Required]
         public int DataPointIndex { get; set; }
@@ -11,9 +11,9 @@ namespace d_lama_service.Models.ProjectModels
         [Required]
         public bool IsLabelled { get; set; }
 
-        public ReadTextDataPointModel(TextDataPoint textDataPoint, bool isLabelled) : base(textDataPoint)
+        public ReadDataPointModel(int dataPointId, bool isLabelled)
         {
-            DataPointIndex = textDataPoint.DataPointIndex;
+            DataPointIndex = dataPointId;
             IsLabelled = isLabelled;
         }
     }

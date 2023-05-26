@@ -1,7 +1,5 @@
-﻿using d_lama_service;
-using d_lama_service.Models.UserModels;
+﻿using d_lama_service.Models.UserModels;
 using Data.ProjectEntities;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Newtonsoft.Json;
 using System.Net;
 using System.Net.Http.Headers;
