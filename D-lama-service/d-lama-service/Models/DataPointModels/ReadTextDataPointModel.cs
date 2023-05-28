@@ -9,7 +9,7 @@ namespace d_lama_service.Models.DataPointModels
         [Required]
         public string Content { get; set; }
 
-        public ReadTextDataPointModel(TextDataPoint textDataPoint, bool isLabelled) : base(textDataPoint.Id, isLabelled)
+        public ReadTextDataPointModel(TextDataPoint textDataPoint, bool isLabelled) : base(textDataPoint.DataPointIndex, isLabelled)
         {
             Content = textDataPoint.Content;
         }
