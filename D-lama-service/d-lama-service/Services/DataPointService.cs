@@ -279,6 +279,47 @@ namespace d_lama_service.Services
             return labeledData;
         }
 
+        public async Task<List<ReadTextDataPointModel>> GetTextDataPointRangeAsync(int projectId, User user, int? startIndex = null, int? endIndex = null) 
+        {
+            var project = await GetProjectAsync(projectId);
+            var dataPoints = await _textDataPointRepository.FindAsync(e => e.ProjectId == projectId);
+
+            if (startIndex != null && endIndex != null)
+            {
+                dataPoints = dataPoints.Where(e => e.DataPointIndex >= startIndex && e.DataPointIndex <= endIndex);
+            }
+
+            var responseList = new List<ReadTextDataPointModel>();
+            foreach (var dataPoint in dataPoints)
+            {
+                var isLableled = await IsDataPointLabeledByUser(user, project.Id, dataPoint.DataPointIndex);
+                responseList.Add(new ReadTextDataPointModel(dataPoint, isLableled));
+            }
+            return responseList;
+        }
+
+        public async Task<List<ReadImageDataPointModel>> GetImageDataPointRangeAsync(int projectId, User user, int? startIndex = null, int? endIndex = null)
+        {
+            var project = await GetProjectAsync(projectId);
+            var dataPoints = await _imageDataPointRepository.FindAsync(e => e.ProjectId == projectId);
+
+            if (startIndex != null && endIndex != null)
+            {
+                dataPoints = dataPoints.Where(e => e.DataPointIndex >= startIndex && e.DataPointIndex <= endIndex);
+            }
+
+            var responseList = new List<ReadImageDataPointModel>();
+            foreach (var dataPoint in dataPoints)
+            {
+                var isLableled = await IsDataPointLabeledByUser(user, project.Id, dataPoint.DataPointIndex);
+                responseList.Add(new ReadImageDataPointModel(dataPoint, isLableled));
+            }
+            return responseList;
+        }
+
+
+
+
         private async Task<Label> GetLabelAsync(int labelId)
         {
             Label? label = await _labelRepository.GetAsync(labelId);
