@@ -318,8 +318,6 @@ namespace d_lama_service.Services
         }
 
 
-
-
         private async Task<Label> GetLabelAsync(int labelId)
         {
             Label? label = await _labelRepository.GetAsync(labelId);

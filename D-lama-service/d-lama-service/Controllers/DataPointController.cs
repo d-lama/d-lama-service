@@ -90,7 +90,6 @@ namespace d_lama_service.Controllers
         {
             User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
             ProjectDataType dataType = await _dataPointService.GetProjectTypeAsync(projectId);
-
             if (dataType == ProjectDataType.Text)
             {
                 var dataPoints = await _dataPointService.GetTextDataPointRangeAsync(projectId, user, startIndex, endIndex);
