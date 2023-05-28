@@ -89,8 +89,14 @@ namespace d_lama_service.Controllers
         public async Task<IActionResult> GetRange(int projectId, int startIndex, int endIndex)
         {
             User user = await _sharedService.GetAuthenticatedUserAsync(HttpContext);
-            List<ReadDataPointModel> dataPoints = await _dataPointService.GetDataPointsFromProjectAsync(projectId, user, startIndex, endIndex);
-            return Ok(dataPoints);
+            ProjectDataType dataType = await _dataPointService.GetProjectTypeAsync(projectId);
+            if (dataType == ProjectDataType.Text)
+            {
+                var dataPoints = await _dataPointService.GetTextDataPointRangeAsync(projectId, user, startIndex, endIndex);
+                return Ok(dataPoints);
+            }
+            var imageDataPoints = await _dataPointService.GetImageDataPointRangeAsync(projectId, user, startIndex, endIndex);
+            return Ok(imageDataPoints);
         }
 
         /// <summary>

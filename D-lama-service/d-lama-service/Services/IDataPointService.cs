@@ -143,5 +143,25 @@ namespace d_lama_service.Services
         /// <param name="modifiedTextDataPoint"> The updated text data point. </param>
         /// <returns></returns>
         Task UpdateTextDataPointAsync(Project project, int dataPointIndex, EditTextDataPointModel modifiedTextDataPoint);
+
+        /// <summary>
+        /// Gets a range of image data points. 
+        /// </summary>
+        /// <param name="projectId"> The project id, where the data points are assigend to. </param>
+        /// <param name="user"> The user making the request. </param>
+        /// <param name="startIndex"> The start index. </param>
+        /// <param name="endIndex"> The end index.</param>
+        /// <returns> A list of data points. </returns>
+        Task<List<ReadImageDataPointModel>> GetImageDataPointRangeAsync(int projectId, User user, int? startIndex = null, int? endIndex = null);
+
+        /// <summary>
+        /// Gets a range of image data points. 
+        /// </summary>
+        /// <param name="projectId"> The project id, where the data points are assigend to. </param>
+        /// <param name="user"> The user making the request. </param>
+        /// <param name="startIndex"> The start index. </param>
+        /// <param name="endIndex"> The end index.</param>
+        /// <returns> A list of data points. </returns>
+        Task<List<ReadTextDataPointModel>> GetTextDataPointRangeAsync(int projectId, User user, int? startIndex = null, int? endIndex = null);
     }
 }
